@@ -1,15 +1,9 @@
 # starhue
 
-**Temperature → the true colour of a star, plus the Planck spectrum behind it.**
+**Temperature → the colour of a star, plus its Planck spectrum.**
 
-Give `starhue` a temperature in kelvin and it returns the actual sRGB colour a
-blackbody of that temperature would show your eye — derived properly, by
-integrating the Planck curve against the CIE 1931 colour-matching functions —
-together with the spectral curve, Wien peak, Stefan–Boltzmann output, and
-spectral class. It renders all of this as a truecolor terminal card or a
-gorgeous standalone SVG.
-
-Pure Python standard library. **No dependencies.**
+`starhue` takes a temperature value in kelvin, and returns the actual sRGB colour that a
+blackbody of that temperature would show to your eye. 
 
 <p align="center">
   <img src="assets/sun.png" alt="starhue card for the Sun (5772 K)" width="640">
