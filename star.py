@@ -4,10 +4,11 @@ pipelines together for one temperature.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from . import color, physics
+from . import cct, color, physics
 from .classify import SpectralType, appearance_name, spectral_class
+from .constants import C
 
 __all__ = ["Star"]
 
@@ -33,6 +34,50 @@ class Star:
         physics._check_temperature(temperature_k)
         self.temperature = float(temperature_k)
         self._color_step_nm = color_step_nm
+
+    # -- inverse constructors (colour → temperature) -------------------------
+    @classmethod
+    def from_rgb(cls, rgb: Tuple[float, float, float]) -> "Star":
+        """Build the nearest blackbody to an sRGB ``(r, g, b)`` colour (0–255)."""
+        return cls(cct.cct_from_rgb(rgb).temperature_k)
+
+    @classmethod
+    def from_hex(cls, value: str) -> "Star":
+        """Build the nearest blackbody to a ``#rrggbb`` colour."""
+        return cls(cct.cct_from_hex(value).temperature_k)
+
+    @classmethod
+    def from_color(cls, color_value: Union[str, Tuple[float, float, float]]) -> "Star":
+        """Build the nearest blackbody to a colour given as hex or an RGB triple."""
+        if isinstance(color_value, str):
+            return cls.from_hex(color_value)
+        return cls.from_rgb(color_value)
+
+    # -- Doppler shift -------------------------------------------------------
+    def doppler_shifted(
+        self,
+        *,
+        beta: Optional[float] = None,
+        velocity_kms: Optional[float] = None,
+        redshift: Optional[float] = None,
+    ) -> "Star":
+        """Return a new :class:`Star` as this one would appear in radial motion.
+
+        Specify exactly one of ``beta`` (v/c), ``velocity_kms`` (km/s), or
+        ``redshift`` (z). Positive values mean **receding** (redshifted, cooler);
+        negative ``beta``/``velocity_kms`` (or ``-1 < z < 0``) mean approaching.
+        """
+        given = [v is not None for v in (beta, velocity_kms, redshift)]
+        if sum(given) != 1:
+            raise ValueError("pass exactly one of beta, velocity_kms or redshift")
+        if velocity_kms is not None:
+            beta = velocity_kms * 1000.0 / C
+        elif redshift is not None:
+            beta = physics.beta_from_redshift(redshift)
+        return Star(
+            physics.relativistic_doppler_temperature(self.temperature, beta),
+            color_step_nm=self._color_step_nm,
+        )
 
     # -- colour --------------------------------------------------------------
     @property

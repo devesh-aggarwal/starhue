@@ -31,6 +31,10 @@ __all__ = [
     "temperature_to_hex",
     "temperature_to_xy",
     "wavelength_to_rgb",
+    "hex_to_rgb",
+    "srgb_to_xyz",
+    "rgb_to_xy",
+    "xy_to_uv",
     "VISIBLE_LO_NM",
     "VISIBLE_HI_NM",
 ]
@@ -46,6 +50,14 @@ _XYZ_TO_RGB = (
     (3.2406255, -1.5372080, -0.4986286),
     (-0.9689307, 1.8757561, 0.0415175),
     (0.0557101, -0.2040211, 1.0569959),
+)
+
+# The forward direction (linear sRGB → CIE XYZ, D65), used to read the
+# chromaticity *out* of a colour for inverse-CCT work.
+_RGB_TO_XYZ = (
+    (0.4123908, 0.3575843, 0.1804808),
+    (0.2126390, 0.7151687, 0.0721923),
+    (0.0193308, 0.1191948, 0.9505322),
 )
 
 
@@ -169,3 +181,52 @@ def wavelength_to_rgb(wavelength_nm: float) -> Tuple[int, int, int]:
 
 def _to_8bit(c: float) -> int:
     return max(0, min(255, int(round(c * 255.0))))
+
+
+# --------------------------------------------------------------------------
+# Inverse direction: a display colour → chromaticity (for inverse CCT).
+# --------------------------------------------------------------------------
+
+
+def _gamma_decode(c: float) -> float:
+    """Gamma-companded sRGB channel → linear light (inverse of :func:`_gamma_encode`)."""
+    if c <= 0.04045:
+        return c / 12.92
+    return ((c + 0.055) / 1.055) ** 2.4
+
+
+def hex_to_rgb(value: str) -> Tuple[int, int, int]:
+    """Parse a ``#rgb`` or ``#rrggbb`` string into a ``(r, g, b)`` 0–255 triple."""
+    s = value.strip().lstrip("#")
+    if len(s) == 3:
+        s = "".join(ch * 2 for ch in s)
+    if len(s) != 6:
+        raise ValueError(f"not a hex colour: {value!r}")
+    try:
+        return int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16)
+    except ValueError:
+        raise ValueError(f"not a hex colour: {value!r}") from None
+
+
+def srgb_to_xyz(r: float, g: float, b: float) -> Tuple[float, float, float]:
+    """Gamma-encoded sRGB (channels in ``[0, 1]``) → CIE XYZ."""
+    rl, gl, bl = _gamma_decode(r), _gamma_decode(g), _gamma_decode(b)
+    m = _RGB_TO_XYZ
+    x = m[0][0] * rl + m[0][1] * gl + m[0][2] * bl
+    y = m[1][0] * rl + m[1][1] * gl + m[1][2] * bl
+    z = m[2][0] * rl + m[2][1] * gl + m[2][2] * bl
+    return x, y, z
+
+
+def rgb_to_xy(rgb: Tuple[float, float, float]) -> Tuple[float, float]:
+    """An sRGB ``(r, g, b)`` triple (0–255) → CIE 1931 chromaticity ``(x, y)``."""
+    r, g, b = rgb
+    return xyz_to_xy(*srgb_to_xyz(r / 255.0, g / 255.0, b / 255.0))
+
+
+def xy_to_uv(x: float, y: float) -> Tuple[float, float]:
+    """CIE 1931 ``(x, y)`` → CIE 1960 UCS ``(u, v)`` — the space CCT is defined in."""
+    denom = -2.0 * x + 12.0 * y + 3.0
+    if denom == 0:
+        return 0.0, 0.0
+    return 4.0 * x / denom, 6.0 * y / denom

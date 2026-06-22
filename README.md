@@ -74,12 +74,43 @@ star.to_dict()            # everything, JSON-ready
 star.spectrum(380, 750, samples=100, normalize=True)
 ```
 
+### Inverse: colour → temperature (CCT)
+
+Go the other way too. The correlated colour temperature is the nearest point on
+the Planckian locus in CIE 1960 *uv* space, so it round-trips with the forward
+model. You also get **Duv** — the signed distance from the locus (≈0 means the
+colour really is blackbody-like; + is the green side, − the pink side).
+
+```python
+starhue.cct_from_hex('#ffd1a3')   # CCTResult(temperature_k=3911.0, duv=-0.0012)
+starhue.cct_from_rgb((205, 217, 255)).temperature_k   # ~10000
+
+starhue.Star.from_hex('#fff1ea')  # Star(5773 K, #fff1ea, class G)
+starhue.Star.from_color((255, 200, 140))
+```
+
+### Doppler shift
+
+A relativistically Doppler-shifted blackbody is *still* a blackbody at a shifted
+temperature, so motion just gives you another `Star`. Positive velocity =
+receding (redshift, cooler & redder); negative = approaching (bluer).
+
+```python
+sun = starhue.Star(5772)
+sun.doppler_shifted(beta=0.3)         # Star(4235 K, …)  — receding at 0.3c
+sun.doppler_shifted(velocity_kms=-500)
+sun.doppler_shifted(redshift=1.0).temperature   # 2886.0  (= T / (1+z))
+
+starhue.relativistic_doppler_temperature(5772, 0.3)   # 4235.5
+```
+
 Lower-level physics and colour functions live in `starhue.physics` and
 `starhue.color`:
 
 ```python
 from starhue.physics import planck, wien_peak_wavelength, stefan_boltzmann
 from starhue.color import temperature_to_rgb, wavelength_to_rgb, cie_1931_xyz
+from starhue.cct import cct_from_xy, cct_from_uv
 ```
 
 ## The science
@@ -153,8 +184,18 @@ options:
   --svg PATH          write an SVG (a card for one temp, a strip for many)
   --json              emit a JSON summary instead of a card
   --no-spectrum       hide the spectrum sparkline in cards
+  --from-color COLOR  inverse mode: a colour (#rrggbb or r,g,b) → its nearest blackbody
+  --beta B            Doppler shift by radial velocity v/c (+ = receding)
+  --velocity-kms V    Doppler shift by radial velocity in km/s
+  --redshift Z        Doppler shift by redshift z
   --color / --no-color   force or disable ANSI colour (auto-detected by default)
   --version
+```
+
+```bash
+starhue --from-color '#ffd1a3'   # what temperature is this colour?
+starhue 5772 --beta 0.3          # the Sun receding at 0.3c
+starhue --range 1000 12000 --redshift 0.5   # a redshifted gradient
 ```
 
 Colour output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
@@ -164,8 +205,9 @@ Colour output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
 | module | role |
 |---|---|
 | `constants` | exact SI / CODATA physical constants |
-| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, spectrum sampling |
-| `color` | CIE 1931 CMF → XYZ → sRGB; wavelength → display colour |
+| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, Doppler shift, spectrum sampling |
+| `color` | CIE 1931 CMF → XYZ → sRGB; chromaticity; wavelength → display colour |
+| `cct` | inverse direction: colour → correlated colour temperature + Duv |
 | `classify` | Harvard spectral class + perceptual colour names |
 | `star` | the high-level `Star` object |
 | `render` | terminal cards, spectrum sparkline, gradient strip |
