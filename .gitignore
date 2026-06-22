@@ -1,1 +1,6 @@
+# Virtual environment
 /starhue
+
+# Python bytecode cache
+__pycache__/
+*.py[cod]
