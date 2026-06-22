@@ -177,14 +177,48 @@ def temperature_to_hex(temperature_k: float, step_nm: float = 1.0) -> str:
 
 
 def wavelength_to_rgb(wavelength_nm: float) -> Tuple[int, int, int]:
-    """Approximate display colour of a single monochromatic wavelength (0–255).
+    """Display colour of a single monochromatic wavelength (0–255).
 
-    Used to paint spectrum plots with the rainbow. Outside the visible band the
-    colour fades toward black.
+    Used to paint spectrum plots. The hue follows the spectral ramp
+    (violet→blue→cyan→green→yellow→red) across the ~400–700 nm visible window,
+    held at full brightness so the visible edges stay vivid. Past that window the
+    colour dims smoothly to black — through the UV below 400 nm and the infrared
+    above 700 nm — because those wavelengths are invisible to the eye.
+
+    The violet end stops at a true blue-violet rather than running all the way to
+    magenta: pink/magenta is non-spectral (no single wavelength looks pink), so
+    no star and no rainbow should show it.
+
+    The CIE colour-matching functions are deliberately *not* used for the hue:
+    their near-zero tails past ~700 nm cross over, and once renormalised to full
+    brightness that flips deep red back to pure green (the ȳ tail outlives x̄).
     """
-    xb, yb, zb = cie_1931_xyz(wavelength_nm)
-    r, g, b = xyz_to_srgb(xb, yb, zb)
-    return _to_8bit(r), _to_8bit(g), _to_8bit(b)
+    wh = min(700.0, max(400.0, wavelength_nm))  # hue plateau: violet 400 → red 700
+    if wh < 450:
+        r, g, b = 0.4 * (450 - wh) / 50.0, 0.0, 1.0  # blue-violet, capped short of magenta
+    elif wh < 490:
+        r, g, b = 0.0, (wh - 450) / 40.0, 1.0
+    elif wh < 510:
+        r, g, b = 0.0, 1.0, (510 - wh) / 20.0
+    elif wh < 580:
+        r, g, b = (wh - 510) / 70.0, 1.0, 0.0
+    elif wh < 645:
+        r, g, b = 1.0, (645 - wh) / 65.0, 0.0
+    else:
+        r, g, b = 1.0, 0.0, 0.0
+
+    # Brightness envelope: full across the visible band, fading to black through
+    # the UV (400 → 300 nm) and infrared (700 → 1000 nm).
+    w = wavelength_nm
+    if w < 400.0:
+        f = max(0.0, (w - 300.0) / 100.0)
+    elif w > 700.0:
+        f = max(0.0, (1000.0 - w) / 300.0)
+    else:
+        f = 1.0
+
+    gamma = 0.8  # mild lift for a richer, poster-like rainbow
+    return _to_8bit((r * f) ** gamma), _to_8bit((g * f) ** gamma), _to_8bit((b * f) ** gamma)
 
 
 def _to_8bit(c: float) -> int:

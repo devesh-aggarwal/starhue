@@ -34,15 +34,16 @@ def _esc(text: str) -> str:
 
 
 def _spectrum_stops(lo_nm: float, hi_nm: float, step: float = 8.0) -> str:
-    """Gradient stops painting the plot band with the perceived spectrum colour."""
+    """Gradient stops painting the plot band with the perceived spectrum colour.
+
+    ``wavelength_to_rgb`` already fades the rainbow to black through the UV and
+    infrared, so the band dims smoothly past the edges of the visible window.
+    """
     stops: List[str] = []
     n = max(2, int((hi_nm - lo_nm) / step) + 1)
     for i in range(n):
         w = lo_nm + (hi_nm - lo_nm) * i / (n - 1)
-        if _color.VISIBLE_LO_NM <= w <= _color.VISIBLE_HI_NM:
-            r, g, b = _color.wavelength_to_rgb(w)
-        else:
-            r, g, b = 60, 64, 78  # IR / UV — outside the eye's window
+        r, g, b = _color.wavelength_to_rgb(w)
         off = i / (n - 1) * 100.0
         stops.append(f'<stop offset="{off:.2f}%" stop-color="rgb({r},{g},{b})"/>')
     return "".join(stops)
@@ -104,9 +105,22 @@ def star_card_svg(star: Star, width: int = 760, height: int = 480) -> str:
             f'<text x="{tx:.1f}" y="{py1 + 18:.1f}" fill="{_MUTED}" font-size="11" '
             f'font-family="{_MONO}" text-anchor="middle">{w}</text>'
         )
-    # visible-band bracket shading
-    vlo = px0 + (_color.VISIBLE_LO_NM - lo_nm) / (hi_nm - lo_nm) * (px1 - px0)
-    vhi = px0 + (_color.VISIBLE_HI_NM - lo_nm) / (hi_nm - lo_nm) * (px1 - px0)
+    # Visible band (~400–700 nm) gets a faint highlight; the UV and infrared
+    # wings are labelled where the rainbow fades out.
+    vis_lo_nm, vis_hi_nm = 400.0, 700.0
+
+    def _wx(nm: float) -> float:
+        return px0 + (nm - lo_nm) / (hi_nm - lo_nm) * (px1 - px0)
+
+    vlo, vhi = _wx(vis_lo_nm), _wx(vis_hi_nm)
+    uv_cx = _wx((lo_nm + vis_lo_nm) / 2.0)
+    ir_cx = _wx((vis_hi_nm + hi_nm) / 2.0)
+    band_labels = (
+        f'<text x="{uv_cx:.1f}" y="{py1 - 9:.1f}" fill="{_MUTED}" font-size="11" '
+        f'text-anchor="middle" opacity="0.85" font-style="italic">UV</text>'
+        f'<text x="{ir_cx:.1f}" y="{py1 - 9:.1f}" fill="{_MUTED}" font-size="11" '
+        f'text-anchor="middle" opacity="0.85" font-style="italic">infrared</text>'
+    )
 
     # Wien peak marker
     peak = star.peak_wavelength_nm
@@ -164,6 +178,7 @@ def star_card_svg(star: Star, width: int = 760, height: int = 480) -> str:
   {''.join(ticks)}
   <path d="{area}" fill="url(#spectrum)" opacity="0.78"/>
   <path d="{line}" fill="none" stroke="{_FG}" stroke-width="2" opacity="0.9"/>
+  {band_labels}
   {peak_marks}
   <text x="{(px0 + px1) / 2:.1f}" y="{height - 12}" fill="{_MUTED}" font-size="12" text-anchor="middle">spectral radiance vs. wavelength (nm) — Planck's law</text>
 </svg>
