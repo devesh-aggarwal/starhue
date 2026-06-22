@@ -1,0 +1,171 @@
+"""From a Planck spectrum to a real sRGB colour.
+
+The pipeline is the textbook colorimetry route:
+
+1. Sample the Planck curve across the visible band.
+2. Integrate against the CIE 1931 2° colour-matching functions → CIE XYZ.
+3. Map XYZ → linear sRGB with the standard D65 matrix.
+4. Clamp out-of-gamut negatives, normalise to constant luminance, gamma-encode.
+
+The colour-matching functions use the analytic multi-lobe Gaussian fit of
+Wyman, Sloan & Shirley, *"Simple Analytic Approximations to the CIE XYZ Colour
+Matching Functions"*, JCGT 2(2), 2013. It reproduces the tabulated CIE curves
+to within ~1% with no embedded data table.
+"""
+
+from __future__ import annotations
+
+import math
+from typing import Tuple
+
+from .physics import planck_nm
+
+__all__ = [
+    "cie_1931_xyz",
+    "spectrum_to_xyz",
+    "xyz_to_xy",
+    "xyz_to_srgb",
+    "temperature_to_xyz",
+    "temperature_to_rgb",
+    "temperature_to_rgb01",
+    "temperature_to_hex",
+    "temperature_to_xy",
+    "wavelength_to_rgb",
+    "VISIBLE_LO_NM",
+    "VISIBLE_HI_NM",
+]
+
+#: Lower / upper bounds of the integration band, nm. The Gaussian lobes have
+#: negligible weight outside this, matching the usual 360–830 nm CIE table.
+VISIBLE_LO_NM = 360.0
+VISIBLE_HI_NM = 830.0
+
+# Linear-sRGB → CIE XYZ is well conditioned; we want the inverse (XYZ → linear
+# sRGB) under a D65 white point. These are the canonical IEC 61966-2-1 values.
+_XYZ_TO_RGB = (
+    (3.2406255, -1.5372080, -0.4986286),
+    (-0.9689307, 1.8757561, 0.0415175),
+    (0.0557101, -0.2040211, 1.0569959),
+)
+
+
+def _gauss(x: float, mu: float, s1: float, s2: float) -> float:
+    """Piecewise (asymmetric) Gaussian lobe used by the Wyman et al. fit."""
+    t = (x - mu) * (s1 if x < mu else s2)
+    return math.exp(-0.5 * t * t)
+
+
+def cie_1931_xyz(wavelength_nm: float) -> Tuple[float, float, float]:
+    """CIE 1931 2° colour-matching functions ``(x̄, ȳ, z̄)`` at one wavelength.
+
+    Analytic multi-lobe Gaussian approximation (Wyman, Sloan & Shirley 2013).
+    """
+    w = wavelength_nm
+    x = (
+        1.056 * _gauss(w, 599.8, 0.0264, 0.0323)
+        + 0.362 * _gauss(w, 442.0, 0.0624, 0.0374)
+        - 0.065 * _gauss(w, 501.1, 0.0490, 0.0382)
+    )
+    y = 0.821 * _gauss(w, 568.8, 0.0213, 0.0247) + 0.286 * _gauss(w, 530.9, 0.0613, 0.0322)
+    z = 1.217 * _gauss(w, 437.0, 0.0845, 0.0278) + 0.681 * _gauss(w, 459.0, 0.0385, 0.0725)
+    return x, y, z
+
+
+def spectrum_to_xyz(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float, float]:
+    """Integrate a blackbody spectrum against the CMFs to get CIE XYZ.
+
+    The absolute scale is irrelevant for hue (we normalise later), so the
+    integration constant is dropped.
+    """
+    if step_nm <= 0:
+        raise ValueError("step_nm must be positive")
+    x_sum = y_sum = z_sum = 0.0
+    w = VISIBLE_LO_NM
+    while w <= VISIBLE_HI_NM + 1e-9:
+        power = planck_nm(w, temperature_k)
+        xb, yb, zb = cie_1931_xyz(w)
+        x_sum += power * xb
+        y_sum += power * yb
+        z_sum += power * zb
+        w += step_nm
+    return x_sum * step_nm, y_sum * step_nm, z_sum * step_nm
+
+
+def xyz_to_xy(x: float, y: float, z: float) -> Tuple[float, float]:
+    """CIE XYZ → chromaticity coordinates ``(x, y)``."""
+    total = x + y + z
+    if total <= 0:
+        return 0.0, 0.0
+    return x / total, y / total
+
+
+def _gamma_encode(c: float) -> float:
+    """Linear-light channel → gamma-companded sRGB (IEC 61966-2-1)."""
+    if c <= 0.0031308:
+        return 12.92 * c
+    return 1.055 * (c ** (1.0 / 2.4)) - 0.055
+
+
+def xyz_to_srgb(x: float, y: float, z: float) -> Tuple[float, float, float]:
+    """CIE XYZ → display sRGB as three floats in ``[0, 1]``.
+
+    Out-of-gamut negatives are clamped to zero and the result is normalised to
+    constant maximum luminance, so the returned colour is the *hue* of the
+    blackbody at full brightness (the conventional way to show star colours).
+    """
+    m = _XYZ_TO_RGB
+    r = m[0][0] * x + m[0][1] * y + m[0][2] * z
+    g = m[1][0] * x + m[1][1] * y + m[1][2] * z
+    b = m[2][0] * x + m[2][1] * y + m[2][2] * z
+
+    # Clamp impossible (negative) colours back into gamut.
+    r, g, b = max(0.0, r), max(0.0, g), max(0.0, b)
+
+    # Normalise to constant luminance: brightest primary becomes 1.0.
+    peak = max(r, g, b)
+    if peak > 0:
+        r, g, b = r / peak, g / peak, b / peak
+
+    return _gamma_encode(r), _gamma_encode(g), _gamma_encode(b)
+
+
+def temperature_to_xyz(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float, float]:
+    """Convenience: temperature → CIE XYZ tristimulus values."""
+    return spectrum_to_xyz(temperature_k, step_nm)
+
+
+def temperature_to_xy(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float]:
+    """Temperature → CIE 1931 chromaticity ``(x, y)`` on the Planckian locus."""
+    return xyz_to_xy(*spectrum_to_xyz(temperature_k, step_nm))
+
+
+def temperature_to_rgb01(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float, float]:
+    """Temperature → display sRGB as three floats in ``[0, 1]``."""
+    return xyz_to_srgb(*spectrum_to_xyz(temperature_k, step_nm))
+
+
+def temperature_to_rgb(temperature_k: float, step_nm: float = 1.0) -> Tuple[int, int, int]:
+    """Temperature → display sRGB as a ``(r, g, b)`` triple of 0–255 ints."""
+    r, g, b = temperature_to_rgb01(temperature_k, step_nm)
+    return _to_8bit(r), _to_8bit(g), _to_8bit(b)
+
+
+def temperature_to_hex(temperature_k: float, step_nm: float = 1.0) -> str:
+    """Temperature → ``#rrggbb`` sRGB hex string."""
+    r, g, b = temperature_to_rgb(temperature_k, step_nm)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def wavelength_to_rgb(wavelength_nm: float) -> Tuple[int, int, int]:
+    """Approximate display colour of a single monochromatic wavelength (0–255).
+
+    Used to paint spectrum plots with the rainbow. Outside the visible band the
+    colour fades toward black.
+    """
+    xb, yb, zb = cie_1931_xyz(wavelength_nm)
+    r, g, b = xyz_to_srgb(xb, yb, zb)
+    return _to_8bit(r), _to_8bit(g), _to_8bit(b)
+
+
+def _to_8bit(c: float) -> int:
+    return max(0, min(255, int(round(c * 255.0))))
