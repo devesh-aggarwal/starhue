@@ -32,8 +32,10 @@ def spectral_class(temperature_k: float) -> SpectralType:
     for min_t, letter, desc, example in MK_CLASSES:
         if temperature_k >= min_t:
             return SpectralType(letter, desc, example)
-    # Unreachable: the last bucket starts at 0 K.
-    return SpectralType("M", "red, cool and abundant", "Betelgeuse")
+    # The last bucket starts at 0 K, so the loop always returns for a normal
+    # temperature; this only guards a non-finite value slipping through.
+    _, letter, desc, example = MK_CLASSES[-1]
+    return SpectralType(letter, desc, example)
 
 
 # (max_temp_K exclusive, name). The colours people actually perceive.
@@ -56,4 +58,5 @@ def appearance_name(temperature_k: float) -> str:
     for max_t, name in _APPEARANCE:
         if temperature_k < max_t:
             return name
-    return "icy blue"
+    # The final bucket has max_t == inf, so the loop always returns above.
+    return _APPEARANCE[-1][1]

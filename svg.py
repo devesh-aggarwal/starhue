@@ -73,12 +73,17 @@ def star_card_svg(star: Star, width: int = 760, height: int = 480) -> str:
     x_chrom, y_chrom = star.chromaticity
 
     # --- glowing star (top-left) -------------------------------------------
+    # Two crossed diffraction spikes: each is a long, thin rect (the long axis
+    # 340 px, the short axis 2.2 px) centred on the star.
     cx, cy, core_r = 130.0, 130.0, 40.0
+    long_half, short_half, long_len, short_len = 170.0, 1.1, 340.0, 2.2
     spikes = []
-    for dx, dy in ((1, 0), (0, 1)):
+    for horizontal in (True, False):
+        w, h = (long_len, short_len) if horizontal else (short_len, long_len)
+        x = cx - (long_half if horizontal else short_half)
+        y = cy - (short_half if horizontal else long_half)
         spikes.append(
-            f'<rect x="{cx - (170 if dx else 1.1):.1f}" y="{cy - (170 if dy else 1.1):.1f}" '
-            f'width="{(340 if dx else 2.2):.1f}" height="{(340 if dy else 2.2):.1f}" '
+            f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" '
             f'fill="url(#spike)" opacity="0.55"/>'
         )
 

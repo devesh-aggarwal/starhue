@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 from typing import List, Tuple
 
-from .constants import C2, H, K_B, SIGMA, WIEN_B, C1L
+from .constants import C1L, C2, H, K_B, SIGMA, WIEN_B
 
 __all__ = [
     "planck",
@@ -165,10 +165,8 @@ def spectrum(
     if hi_nm <= lo_nm:
         raise ValueError("hi_nm must be greater than lo_nm")
     step = (hi_nm - lo_nm) / (samples - 1)
-    pts = [
-        (lo_nm + i * step, planck_nm(lo_nm + i * step, temperature_k))
-        for i in range(samples)
-    ]
+    wavelengths = [lo_nm + i * step for i in range(samples)]
+    pts = [(w, planck_nm(w, temperature_k)) for w in wavelengths]
     if normalize:
         peak = max((r for _, r in pts), default=0.0)
         if peak > 0:

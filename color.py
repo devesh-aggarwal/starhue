@@ -67,6 +67,17 @@ def _gauss(x: float, mu: float, s1: float, s2: float) -> float:
     return math.exp(-0.5 * t * t)
 
 
+def _matmul3(
+    m: Tuple[Tuple[float, float, float], ...], v0: float, v1: float, v2: float
+) -> Tuple[float, float, float]:
+    """Multiply a 3×3 matrix ``m`` by the column vector ``(v0, v1, v2)``."""
+    return (
+        m[0][0] * v0 + m[0][1] * v1 + m[0][2] * v2,
+        m[1][0] * v0 + m[1][1] * v1 + m[1][2] * v2,
+        m[2][0] * v0 + m[2][1] * v1 + m[2][2] * v2,
+    )
+
+
 def cie_1931_xyz(wavelength_nm: float) -> Tuple[float, float, float]:
     """CIE 1931 2° colour-matching functions ``(x̄, ȳ, z̄)`` at one wavelength.
 
@@ -125,10 +136,7 @@ def xyz_to_srgb(x: float, y: float, z: float) -> Tuple[float, float, float]:
     constant maximum luminance, so the returned colour is the *hue* of the
     blackbody at full brightness (the conventional way to show star colours).
     """
-    m = _XYZ_TO_RGB
-    r = m[0][0] * x + m[0][1] * y + m[0][2] * z
-    g = m[1][0] * x + m[1][1] * y + m[1][2] * z
-    b = m[2][0] * x + m[2][1] * y + m[2][2] * z
+    r, g, b = _matmul3(_XYZ_TO_RGB, x, y, z)
 
     # Clamp impossible (negative) colours back into gamut.
     r, g, b = max(0.0, r), max(0.0, g), max(0.0, b)
@@ -211,11 +219,7 @@ def hex_to_rgb(value: str) -> Tuple[int, int, int]:
 def srgb_to_xyz(r: float, g: float, b: float) -> Tuple[float, float, float]:
     """Gamma-encoded sRGB (channels in ``[0, 1]``) → CIE XYZ."""
     rl, gl, bl = _gamma_decode(r), _gamma_decode(g), _gamma_decode(b)
-    m = _RGB_TO_XYZ
-    x = m[0][0] * rl + m[0][1] * gl + m[0][2] * bl
-    y = m[1][0] * rl + m[1][1] * gl + m[1][2] * bl
-    z = m[2][0] * rl + m[2][1] * gl + m[2][2] * bl
-    return x, y, z
+    return _matmul3(_RGB_TO_XYZ, rl, gl, bl)
 
 
 def rgb_to_xy(rgb: Tuple[float, float, float]) -> Tuple[float, float]:

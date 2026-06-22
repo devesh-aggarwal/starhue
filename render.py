@@ -65,23 +65,14 @@ def swatch(rgb: Tuple[int, int, int], width: int = 6, *, color: bool = True) -> 
     return _bg(rgb) + " " * width + _RESET
 
 
-def _spectrum_columns(
-    star: Star, width: int, lo_nm: float, hi_nm: float
-) -> List[Tuple[int, Tuple[int, int, int], float]]:
-    """Per-column (block-level 0..8, foreground colour, wavelength) for the curve."""
-    pts = star.spectrum(lo_nm, hi_nm, samples=width, normalize=True)
-    cols: List[Tuple[int, Tuple[int, int, int], float]] = []
+def _column_color(w_nm: float) -> Tuple[int, int, int]:
+    """Foreground tint for a spectrum column at wavelength ``w_nm``."""
     dim = (70, 70, 78)  # IR/UV: outside the eye's reach, drawn as cool grey
-    for w_nm, level in pts:
-        idx = max(0, min(8, int(round(level * 8))))
-        if _color.VISIBLE_LO_NM <= w_nm <= _color.VISIBLE_HI_NM:
-            base = _color.wavelength_to_rgb(w_nm)
-            # Lift very dark spectral tails so the silhouette stays visible.
-            fg = _mix(dim, base, max(0.35, max(base) / 255.0))
-        else:
-            fg = dim
-        cols.append((idx, fg, w_nm))
-    return cols
+    if not _color.VISIBLE_LO_NM <= w_nm <= _color.VISIBLE_HI_NM:
+        return dim
+    base = _color.wavelength_to_rgb(w_nm)
+    # Lift very dark spectral tails so the silhouette stays visible.
+    return _mix(dim, base, max(0.35, max(base) / 255.0))
 
 
 def spectrum_sparkline(
@@ -93,11 +84,11 @@ def spectrum_sparkline(
     color: bool = True,
 ) -> str:
     """One-line Unicode sparkline of the Planck curve, tinted by wavelength."""
-    cols = _spectrum_columns(star, width, lo_nm, hi_nm)
+    pts = star.spectrum(lo_nm, hi_nm, samples=width, normalize=True)
     out = []
-    for level, fg, _w in cols:
-        ch = _BLOCKS[level]
-        out.append(f"{_fg(fg)}{ch}{_RESET}" if color else ch)
+    for w_nm, level in pts:
+        ch = _BLOCKS[max(0, min(8, round(level * 8)))]
+        out.append(f"{_fg(_column_color(w_nm))}{ch}{_RESET}" if color else ch)
     return "".join(out)
 
 
@@ -109,8 +100,7 @@ def _peak_marker_row(star: Star, width: int, lo_nm: float, hi_nm: float, *, colo
         idx = round((peak - lo_nm) / (hi_nm - lo_nm) * (width - 1))
         idx = max(0, min(width - 1, idx))
         if color:
-            tint = _color.wavelength_to_rgb(peak) if lo_nm <= peak <= hi_nm else (200, 200, 200)
-            row[idx] = f"{_fg(tint)}▲{_RESET}"
+            row[idx] = f"{_fg(_color.wavelength_to_rgb(peak))}▲{_RESET}"
         else:
             row[idx] = "^"
     return "".join(row)
@@ -154,9 +144,8 @@ def star_card(star: Star, *, color: bool = True, spectrum: bool = True, width: i
     pad = width - len(title) - len(klass)
     rows.append((title + " " * max(1, pad) + klass, width))
 
-    line2 = f"{sw}  {star.hex}  rgb{rgb}"
-    line2_w = 8 + 2 + len(f"{star.hex}  rgb{rgb}")
-    rows.append((line2, line2_w))
+    stats = f"{star.hex}  rgb{rgb}"
+    rows.append((f"{sw}  {stats}", 8 + 2 + len(stats)))
 
     desc = f"{st.description} · {star.appearance}"
     rows.append((desc, len(desc)))
@@ -176,7 +165,8 @@ def star_card(star: Star, *, color: bool = True, spectrum: bool = True, width: i
         spark = spectrum_sparkline(star, width, lo, hi, color=color)
         rows.append((spark, width))
         rows.append((_peak_marker_row(star, width, lo, hi, color=color), width))
-        axis = f"{lo:g}nm" + " " * (width - len(f"{lo:g}nm") - len(f"{hi:g}nm")) + f"{hi:g}nm"
+        lo_label, hi_label = f"{lo:g}nm", f"{hi:g}nm"
+        axis = lo_label + " " * (width - len(lo_label) - len(hi_label)) + hi_label
         rows.append((axis, width))
 
     texts = [t for t, _ in rows]
