@@ -53,7 +53,13 @@ _APPEARANCE: List[Tuple[float, str]] = [
 
 
 def appearance_name(temperature_k: float) -> str:
-    """A friendly, perceptual color name for a blackbody temperature."""
+    """A friendly, perceptual color name for a blackbody temperature.
+
+    This is the star's color as seen *in a vacuum* — the light leaving its
+    surface, before any atmosphere reddens it. So the Sun (5772 K) comes out a
+    neutral white here, not the yellow it looks from the ground (Earth's
+    atmosphere scatters away the blue and tints the disc yellow).
+    """
     for max_t, name in _APPEARANCE:
         if temperature_k < max_t:
             return name

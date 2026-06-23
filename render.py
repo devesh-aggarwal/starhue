@@ -132,7 +132,6 @@ def star_card(star: Star, *, color: bool = True, spectrum: bool = True, width: i
     """
     rgb = star.rgb
     st = star.spectral_type
-    x, y = star.chromaticity
     sw = swatch(rgb, 8, color=color)
 
     # (visible text, visible width) pairs — width excludes ANSI escapes.
@@ -155,8 +154,6 @@ def star_card(star: Star, *, color: bool = True, spectrum: bool = True, width: i
     rows.append((peak, len(peak)))
     exit_line = f"exitance  {_human_exitance(star.radiant_exitance)}"
     rows.append((exit_line, len(exit_line)))
-    chroma = f"CIE xy    ({x:.4f}, {y:.4f})"
-    rows.append((chroma, len(chroma)))
 
     if spectrum:
         rows.append(("", 0))

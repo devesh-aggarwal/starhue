@@ -17,7 +17,7 @@ from typing import NamedTuple, Tuple
 
 from . import color as _color
 
-__all__ = ["CCTResult", "cct_from_uv", "cct_from_xy", "cct_from_rgb", "cct_from_hex"]
+__all__ = ["CCTResult", "cct_from_rgb", "cct_from_hex"]
 
 #: Temperature range over which CCT is meaningful, in kelvin.
 T_MIN = 1000.0
@@ -32,7 +32,7 @@ class CCTResult(NamedTuple):
 
 
 def _locus_uv(temperature_k: float) -> Tuple[float, float]:
-    return _color.xy_to_uv(*_color.temperature_to_xy(temperature_k))
+    return _color.xy_to_uv(*_color.xyz_to_xy(*_color.spectrum_to_xyz(temperature_k)))
 
 
 def _dist2_at_mired(mired: float, u: float, v: float) -> float:

@@ -17,16 +17,12 @@ submodules for the underlying functions.
 
 from __future__ import annotations
 
-from .cct import CCTResult, cct_from_hex, cct_from_rgb, cct_from_uv, cct_from_xy
+from .cct import CCTResult, cct_from_hex, cct_from_rgb
 from .classify import SpectralType, spectral_class
 from .color import (
     hex_to_rgb,
-    rgb_to_xy,
     temperature_to_hex,
     temperature_to_rgb,
-    temperature_to_rgb01,
-    temperature_to_xy,
-    temperature_to_xyz,
     wavelength_to_rgb,
 )
 from .physics import (
@@ -36,7 +32,6 @@ from .physics import (
     stefan_boltzmann,
     wien_peak_frequency,
     wien_peak_wavelength,
-    wien_peak_wavelength_nm,
 )
 from .star import Star
 
@@ -50,16 +45,10 @@ __all__ = [
     # color
     "temperature_to_hex",
     "temperature_to_rgb",
-    "temperature_to_rgb01",
-    "temperature_to_xy",
-    "temperature_to_xyz",
     "wavelength_to_rgb",
     "hex_to_rgb",
-    "rgb_to_xy",
     # inverse CCT (color → temperature)
     "CCTResult",
-    "cct_from_xy",
-    "cct_from_uv",
     "cct_from_rgb",
     "cct_from_hex",
     # physics
@@ -68,6 +57,5 @@ __all__ = [
     "spectrum",
     "stefan_boltzmann",
     "wien_peak_wavelength",
-    "wien_peak_wavelength_nm",
     "wien_peak_frequency",
 ]

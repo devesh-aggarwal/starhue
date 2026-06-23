@@ -15,7 +15,6 @@ __all__ = [
     "planck",
     "planck_nm",
     "wien_peak_wavelength",
-    "wien_peak_wavelength_nm",
     "wien_peak_frequency",
     "stefan_boltzmann",
     "spectrum",
@@ -68,15 +67,18 @@ def planck_nm(wavelength_nm: float, temperature_k: float) -> float:
     return planck(wavelength_nm * 1e-9, temperature_k) * 1e-9
 
 
-def wien_peak_wavelength(temperature_k: float) -> float:
-    """Wavelength of peak spectral radiance, in metres (Wien's displacement law)."""
+def wien_peak_wavelength(temperature_k: float, unit: str = "nm") -> float:
+    """Wavelength of peak spectral radiance (Wien's displacement law).
+
+    Returns nanometres by default; pass ``unit="m"`` for metres.
+    """
     _check_temperature(temperature_k)
-    return WIEN_B / temperature_k
-
-
-def wien_peak_wavelength_nm(temperature_k: float) -> float:
-    """Wavelength of peak spectral radiance, in nanometres."""
-    return wien_peak_wavelength(temperature_k) * 1e9
+    metres = WIEN_B / temperature_k
+    if unit == "nm":
+        return metres * 1e9
+    if unit == "m":
+        return metres
+    raise ValueError(f"unit must be 'nm' or 'm', got {unit!r}")
 
 
 def wien_peak_frequency(temperature_k: float) -> float:

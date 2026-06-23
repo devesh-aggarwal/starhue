@@ -34,23 +34,14 @@ class Star:
         self.temperature = float(temperature_k)
         self._color_step_nm = color_step_nm
 
-    # -- inverse constructors (color → temperature) -------------------------
-    @classmethod
-    def from_rgb(cls, rgb: Tuple[float, float, float]) -> "Star":
-        """Build the nearest blackbody to an sRGB ``(r, g, b)`` color (0–255)."""
-        return cls(cct.cct_from_rgb(rgb).temperature_k)
-
-    @classmethod
-    def from_hex(cls, value: str) -> "Star":
-        """Build the nearest blackbody to a ``#rrggbb`` color."""
-        return cls(cct.cct_from_hex(value).temperature_k)
-
+    # -- inverse constructor (color → temperature) --------------------------
     @classmethod
     def from_color(cls, color_value: Union[str, Tuple[float, float, float]]) -> "Star":
-        """Build the nearest blackbody to a color given as hex or an RGB triple."""
+        """Build the nearest blackbody to a color given as ``#rrggbb`` hex or an
+        sRGB ``(r, g, b)`` triple (0–255)."""
         if isinstance(color_value, str):
-            return cls.from_hex(color_value)
-        return cls.from_rgb(color_value)
+            return cls(cct.cct_from_hex(color_value).temperature_k)
+        return cls(cct.cct_from_rgb(color_value).temperature_k)
 
     # -- color --------------------------------------------------------------
     @property
@@ -59,30 +50,15 @@ class Star:
         return color.temperature_to_rgb(self.temperature, self._color_step_nm)
 
     @property
-    def rgb01(self) -> Tuple[float, float, float]:
-        """Display sRGB color as three floats in ``[0, 1]``."""
-        return color.temperature_to_rgb01(self.temperature, self._color_step_nm)
-
-    @property
     def hex(self) -> str:
         """Display sRGB color as a ``#rrggbb`` string."""
         return color.temperature_to_hex(self.temperature, self._color_step_nm)
-
-    @property
-    def xyz(self) -> Tuple[float, float, float]:
-        """CIE 1931 XYZ tristimulus values."""
-        return color.temperature_to_xyz(self.temperature, self._color_step_nm)
-
-    @property
-    def chromaticity(self) -> Tuple[float, float]:
-        """CIE 1931 chromaticity ``(x, y)`` on the Planckian locus."""
-        return color.temperature_to_xy(self.temperature, self._color_step_nm)
 
     # -- physics -------------------------------------------------------------
     @property
     def peak_wavelength_nm(self) -> float:
         """Wavelength of peak spectral radiance (Wien's law), nm."""
-        return physics.wien_peak_wavelength_nm(self.temperature)
+        return physics.wien_peak_wavelength(self.temperature)
 
     @property
     def peak_frequency_hz(self) -> float:
@@ -117,7 +93,11 @@ class Star:
 
     @property
     def appearance(self) -> str:
-        """A friendly perceptual color name, e.g. ``"neutral white"``."""
+        """A friendly perceptual color name, e.g. ``"neutral white"``.
+
+        The color as seen in a vacuum (the Sun reads white here, not the yellow
+        an atmosphere lends it); see :func:`starhue.classify.appearance_name`.
+        """
         return appearance_name(self.temperature)
 
     def __repr__(self) -> str:

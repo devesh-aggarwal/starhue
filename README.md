@@ -31,7 +31,6 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 │                                                │
 │ peak λ    502.0 nm  ·  3.393e+14 Hz            │
 │ exitance  62.94 MW/m²                          │
-│ CIE xy    (0.3263, 0.3361)                     │
 │                                                │
 │ ▄▄▅▆▆▇▇▇██████████▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▃ │
 │            ▲                                    │
@@ -49,13 +48,11 @@ import starhue
 # One-liners
 starhue.temperature_to_hex(5772)     # '#fff1ea'
 starhue.temperature_to_rgb(3500)     # (255, 200, 140)
-starhue.temperature_to_xy(6500)      # (0.3134, 0.3239)  ≈ D65
 
 # The high-level object
 star = starhue.Star(5772)
 star.hex                  # '#fff1ea'
 star.rgb                  # (255, 241, 234)
-star.chromaticity         # (0.3263, 0.3361)  CIE 1931 (x, y)
 star.peak_wavelength_nm   # 502.0     — Wien's displacement law
 star.peak_frequency_hz    # 3.39e14   — frequency-form Wien's law
 star.radiant_exitance     # 6.29e7 W/m²  — Stefan–Boltzmann
@@ -77,8 +74,8 @@ color really is blackbody-like; + is the green side, − the pink side).
 starhue.cct_from_hex('#ffd1a3')   # CCTResult(temperature_k=3911.0, duv=-0.0012)
 starhue.cct_from_rgb((205, 217, 255)).temperature_k   # ~10000
 
-starhue.Star.from_hex('#fff1ea')  # Star(5773 K, #fff1ea, class G)
-starhue.Star.from_color((255, 200, 140))
+starhue.Star.from_color('#fff1ea')        # Star(5773 K, #fff1ea, class G)
+starhue.Star.from_color((255, 200, 140))  # also takes an (r, g, b) triple
 ```
 
 ## Full API reference
@@ -94,9 +91,6 @@ there.
 |---|---|---|
 | `temperature_to_hex` | `(temperature_k, step_nm=1.0) → str` | Temperature → `#rrggbb` sRGB hex string. |
 | `temperature_to_rgb` | `(temperature_k, step_nm=1.0) → (int, int, int)` | Temperature → display sRGB `(r, g, b)`, 0–255. |
-| `temperature_to_rgb01` | `(temperature_k, step_nm=1.0) → (float, float, float)` | Temperature → display sRGB, three floats in `[0, 1]`. |
-| `temperature_to_xy` | `(temperature_k, step_nm=1.0) → (float, float)` | Temperature → CIE 1931 chromaticity `(x, y)`. |
-| `temperature_to_xyz` | `(temperature_k, step_nm=1.0) → (float, float, float)` | Temperature → CIE 1931 XYZ tristimulus values. |
 | `wavelength_to_rgb` | `(wavelength_nm) → (int, int, int)` | Display color of a single monochromatic wavelength (for spectrum plots). |
 
 ### Inverse — color → temperature
@@ -105,10 +99,7 @@ there.
 |---|---|---|
 | `cct_from_hex` | `(value) → CCTResult` | Nearest blackbody (+ Duv) for a `#rrggbb` color. |
 | `cct_from_rgb` | `(rgb) → CCTResult` | Nearest blackbody (+ Duv) for an sRGB `(r, g, b)` 0–255 color. |
-| `cct_from_xy` | `(x, y) → CCTResult` | Nearest blackbody (+ Duv) for a CIE 1931 `(x, y)` color. |
-| `cct_from_uv` | `(u, v) → CCTResult` | Nearest blackbody (+ Duv) for a CIE 1960 `(u, v)` color. |
 | `hex_to_rgb` | `(value) → (int, int, int)` | Parse `#rgb`/`#rrggbb` → `(r, g, b)`, 0–255. |
-| `rgb_to_xy` | `(rgb) → (float, float)` | sRGB `(r, g, b)` 0–255 → CIE 1931 chromaticity `(x, y)`. |
 | `CCTResult` | `NamedTuple(temperature_k, duv)` | What the `cct_from_*` functions return; `duv` is the signed distance from the locus. |
 
 ### Physics
@@ -118,27 +109,17 @@ there.
 | `planck` | `(wavelength_m, temperature_k) → float` | Planck spectral radiance, W·sr⁻¹·m⁻³ (wavelength in **metres**). |
 | `planck_nm` | `(wavelength_nm, temperature_k) → float` | Planck spectral radiance per nm (wavelength in **nanometres**). |
 | `spectrum` | `(temperature_k, lo_nm=300, hi_nm=1100, samples=200, *, normalize=False) → list[(float, float)]` | Sample the Planck curve → `(wavelength_nm, radiance)` pairs. |
-| `wien_peak_wavelength` | `(temperature_k) → float` | Wavelength of peak radiance (Wien), **metres**. |
-| `wien_peak_wavelength_nm` | `(temperature_k) → float` | Wavelength of peak radiance (Wien), **nm**. |
+| `wien_peak_wavelength` | `(temperature_k, unit="nm") → float` | Wavelength of peak radiance (Wien); **nm** by default, `unit="m"` for metres. |
 | `wien_peak_frequency` | `(temperature_k) → float` | Frequency of peak radiance (frequency-form Wien), Hz. |
 | `stefan_boltzmann` | `(temperature_k) → float` | Total radiant exitance σT⁴, W·m⁻². |
 
 ### Classification
 
-| Name | Signature → returns | Description |
-|---|---|---|
-| `spectral_class` | `(temperature_k) → SpectralType` | Harvard spectral type (O/B/A/F/G/K/M) for an effective temperature. |
-| `appearance_name` | `(temperature_k) → str` | Friendly perceptual color name, e.g. `"warm amber"` *(in `starhue.classify`)*. |
-| `SpectralType` | `NamedTuple(letter, description)` | What `spectral_class` returns. |
-
-### Terminal rendering (`starhue.render`)
-
-| Name | Signature → returns | Description |
-|---|---|---|
-| `star_card` | `(star, *, color=True, spectrum=True, width=46) → str` | Multi-line "trading card": swatch, stats and spectrum. |
-| `spectrum_sparkline` | `(star, width=48, lo_nm=300, hi_nm=1100, *, color=True) → str` | One-line Unicode Planck-curve sparkline, tinted by wavelength. |
-| `swatch` | `(rgb, width=6, *, color=True) → str` | A solid color bar of `width` cells. |
-| `supports_color` | `(stream=None) → bool` | Best-effort 24-bit color detection (honours `NO_COLOR` / `FORCE_COLOR`). |
+| Name | Kind | Signature → returns | Description |
+|---|---|---|---|
+| `spectral_class` | function | `(temperature_k) → SpectralType` | Harvard spectral type (O/B/A/F/G/K/M) for an effective temperature. |
+| `appearance_name` | function | `(temperature_k) → str` | Friendly perceptual color name, e.g. `"warm amber"`, as seen in a vacuum *(in `starhue.classify`)*. |
+| `SpectralType` | object | `NamedTuple(letter, description)` | The value `spectral_class` returns — read `.letter` (e.g. `'G'`) and `.description` off it. |
 
 ### The `Star` object (`starhue.Star`)
 
@@ -146,13 +127,11 @@ there.
 `color_step_nm` is the wavelength step (nm) of the color integration; smaller is
 more accurate but slower.
 
-**Inverse constructors** (color → nearest blackbody):
+**Inverse constructor** (color → nearest blackbody):
 
 | Constructor | Signature → returns | Description |
 |---|---|---|
-| `Star.from_rgb` | `(rgb) → Star` | From an sRGB `(r, g, b)` triple (0–255). |
-| `Star.from_hex` | `(value) → Star` | From a `#rrggbb` string. |
-| `Star.from_color` | `(color_value) → Star` | From either a hex string or an `(r, g, b)` triple. |
+| `Star.from_color` | `(color_value) → Star` | From either a `#rrggbb` hex string or an sRGB `(r, g, b)` triple (0–255). |
 
 **Attributes, properties & methods:**
 
@@ -160,10 +139,7 @@ more accurate but slower.
 |---|---|---|---|
 | `temperature` | attribute | `float` | The star's temperature, K. |
 | `rgb` | property | `(int, int, int)` | Display sRGB color, 0–255. |
-| `rgb01` | property | `(float, float, float)` | Display sRGB color, floats in `[0, 1]`. |
 | `hex` | property | `str` | Display sRGB color as `#rrggbb`. |
-| `xyz` | property | `(float, float, float)` | CIE 1931 XYZ tristimulus values. |
-| `chromaticity` | property | `(float, float)` | CIE 1931 chromaticity `(x, y)`. |
 | `peak_wavelength_nm` | property | `float` | Wien peak wavelength, nm. |
 | `peak_frequency_hz` | property | `float` | Wien peak frequency (frequency form), Hz. |
 | `radiant_exitance` | property | `float` | Stefan–Boltzmann exitance, W·m⁻². |

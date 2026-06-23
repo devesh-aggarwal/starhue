@@ -21,20 +21,10 @@ from typing import Tuple
 from .physics import planck_nm
 
 __all__ = [
-    "cie_1931_xyz",
-    "spectrum_to_xyz",
-    "xyz_to_xy",
-    "xyz_to_srgb",
-    "temperature_to_xyz",
     "temperature_to_rgb",
-    "temperature_to_rgb01",
     "temperature_to_hex",
-    "temperature_to_xy",
     "wavelength_to_rgb",
     "hex_to_rgb",
-    "srgb_to_xyz",
-    "rgb_to_xy",
-    "xy_to_uv",
     "VISIBLE_LO_NM",
     "VISIBLE_HI_NM",
 ]
@@ -149,24 +139,9 @@ def xyz_to_srgb(x: float, y: float, z: float) -> Tuple[float, float, float]:
     return _gamma_encode(r), _gamma_encode(g), _gamma_encode(b)
 
 
-def temperature_to_xyz(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float, float]:
-    """Convenience: temperature → CIE XYZ tristimulus values."""
-    return spectrum_to_xyz(temperature_k, step_nm)
-
-
-def temperature_to_xy(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float]:
-    """Temperature → CIE 1931 chromaticity ``(x, y)`` on the Planckian locus."""
-    return xyz_to_xy(*spectrum_to_xyz(temperature_k, step_nm))
-
-
-def temperature_to_rgb01(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float, float]:
-    """Temperature → display sRGB as three floats in ``[0, 1]``."""
-    return xyz_to_srgb(*spectrum_to_xyz(temperature_k, step_nm))
-
-
 def temperature_to_rgb(temperature_k: float, step_nm: float = 1.0) -> Tuple[int, int, int]:
     """Temperature → display sRGB as a ``(r, g, b)`` triple of 0–255 ints."""
-    r, g, b = temperature_to_rgb01(temperature_k, step_nm)
+    r, g, b = xyz_to_srgb(*spectrum_to_xyz(temperature_k, step_nm))
     return _to_8bit(r), _to_8bit(g), _to_8bit(b)
 
 
