@@ -1,11 +1,11 @@
-"""Inverse direction: a colour → its correlated colour temperature (CCT).
+"""Inverse direction: a color → its correlated color temperature (CCT).
 
-The CCT of a colour is *defined* as the temperature of the blackbody whose
+The CCT of a color is *defined* as the temperature of the blackbody whose
 chromaticity is closest to it in the CIE 1960 UCS ``(u, v)`` plane. We find it by
-searching our own Planckian locus, so ``T → colour → T`` round-trips cleanly.
+searching our own Planckian locus, so ``T → color → T`` round-trips cleanly.
 
 Alongside the temperature we report **Duv**: the signed distance from the locus.
-``Duv ≈ 0`` means the colour really does look like a blackbody; a large
+``Duv ≈ 0`` means the color really does look like a blackbody; a large
 ``|Duv|`` means "nearest blackbody" is the best we can say (positive = the green
 side of the locus, negative = the pink/magenta side).
 """
@@ -41,7 +41,7 @@ def _dist2_at_mired(mired: float, u: float, v: float) -> float:
 
 
 def _golden_min(f, a: float, b: float, iters: int = 40) -> float:
-    """Golden-section search for the minimiser of a unimodal ``f`` on ``[a, b]``."""
+    """Golden-section search for the minimizer of a unimodal ``f`` on ``[a, b]``."""
     inv_phi = (math.sqrt(5.0) - 1.0) / 2.0
     c = b - inv_phi * (b - a)
     d = a + inv_phi * (b - a)
@@ -59,7 +59,7 @@ def _golden_min(f, a: float, b: float, iters: int = 40) -> float:
 
 
 def cct_from_uv(u: float, v: float) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for a CIE 1960 ``(u, v)`` colour."""
+    """Nearest blackbody temperature (and Duv) for a CIE 1960 ``(u, v)`` color."""
     # Work in mired (10⁶/T): the Planckian locus is nearly straight there, so a
     # coarse grid reliably brackets the minimum before we refine.
     m_lo, m_hi = 1e6 / T_MAX, 1e6 / T_MIN
@@ -99,15 +99,15 @@ def _signed_duv(temperature_k: float, u: float, v: float) -> float:
 
 
 def cct_from_xy(x: float, y: float) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for a CIE 1931 ``(x, y)`` colour."""
+    """Nearest blackbody temperature (and Duv) for a CIE 1931 ``(x, y)`` color."""
     return cct_from_uv(*_color.xy_to_uv(x, y))
 
 
 def cct_from_rgb(rgb: Tuple[float, float, float]) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for an sRGB ``(r, g, b)`` 0–255 colour."""
+    """Nearest blackbody temperature (and Duv) for an sRGB ``(r, g, b)`` 0–255 color."""
     return cct_from_xy(*_color.rgb_to_xy(rgb))
 
 
 def cct_from_hex(value: str) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for a ``#rrggbb`` colour."""
+    """Nearest blackbody temperature (and Duv) for a ``#rrggbb`` color."""
     return cct_from_rgb(_color.hex_to_rgb(value))

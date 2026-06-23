@@ -24,7 +24,7 @@ _FULL = "█"
 
 
 def supports_color(stream: Optional[object] = None) -> bool:
-    """Best-effort detection of 24-bit terminal colour support.
+    """Best-effort detection of 24-bit terminal color support.
 
     Honours the ``NO_COLOR`` and ``FORCE_COLOR`` conventions.
     """
@@ -66,7 +66,7 @@ def swatch(rgb: Tuple[int, int, int], width: int = 6, *, color: bool = True) -> 
 
 def _column_color(w_nm: float) -> Tuple[int, int, int]:
     """Foreground tint for a spectrum column at wavelength ``w_nm``."""
-    dim = (70, 70, 78)  # IR/UV: outside the eye's reach, drawn as cool grey
+    dim = (70, 70, 78)  # IR/UV: outside the eye's reach, drawn as cool gray
     if not _color.VISIBLE_LO_NM <= w_nm <= _color.VISIBLE_HI_NM:
         return dim
     base = _color.wavelength_to_rgb(w_nm)

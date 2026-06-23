@@ -1,4 +1,4 @@
-"""The :class:`Star` — a friendly object that ties the physics and colour
+"""The :class:`Star` — a friendly object that ties the physics and color
 pipelines together for one temperature.
 """
 
@@ -13,7 +13,7 @@ __all__ = ["Star"]
 
 
 class Star:
-    """A blackbody at a given temperature, with its colour and spectrum on tap.
+    """A blackbody at a given temperature, with its color and spectrum on tap.
 
     Example
     -------
@@ -34,38 +34,38 @@ class Star:
         self.temperature = float(temperature_k)
         self._color_step_nm = color_step_nm
 
-    # -- inverse constructors (colour → temperature) -------------------------
+    # -- inverse constructors (color → temperature) -------------------------
     @classmethod
     def from_rgb(cls, rgb: Tuple[float, float, float]) -> "Star":
-        """Build the nearest blackbody to an sRGB ``(r, g, b)`` colour (0–255)."""
+        """Build the nearest blackbody to an sRGB ``(r, g, b)`` color (0–255)."""
         return cls(cct.cct_from_rgb(rgb).temperature_k)
 
     @classmethod
     def from_hex(cls, value: str) -> "Star":
-        """Build the nearest blackbody to a ``#rrggbb`` colour."""
+        """Build the nearest blackbody to a ``#rrggbb`` color."""
         return cls(cct.cct_from_hex(value).temperature_k)
 
     @classmethod
     def from_color(cls, color_value: Union[str, Tuple[float, float, float]]) -> "Star":
-        """Build the nearest blackbody to a colour given as hex or an RGB triple."""
+        """Build the nearest blackbody to a color given as hex or an RGB triple."""
         if isinstance(color_value, str):
             return cls.from_hex(color_value)
         return cls.from_rgb(color_value)
 
-    # -- colour --------------------------------------------------------------
+    # -- color --------------------------------------------------------------
     @property
     def rgb(self) -> Tuple[int, int, int]:
-        """Display sRGB colour as a ``(r, g, b)`` triple of 0–255 ints."""
+        """Display sRGB color as a ``(r, g, b)`` triple of 0–255 ints."""
         return color.temperature_to_rgb(self.temperature, self._color_step_nm)
 
     @property
     def rgb01(self) -> Tuple[float, float, float]:
-        """Display sRGB colour as three floats in ``[0, 1]``."""
+        """Display sRGB color as three floats in ``[0, 1]``."""
         return color.temperature_to_rgb01(self.temperature, self._color_step_nm)
 
     @property
     def hex(self) -> str:
-        """Display sRGB colour as a ``#rrggbb`` string."""
+        """Display sRGB color as a ``#rrggbb`` string."""
         return color.temperature_to_hex(self.temperature, self._color_step_nm)
 
     @property
@@ -117,7 +117,7 @@ class Star:
 
     @property
     def appearance(self) -> str:
-        """A friendly perceptual colour name, e.g. ``"neutral white"``."""
+        """A friendly perceptual color name, e.g. ``"neutral white"``."""
         return appearance_name(self.temperature)
 
     def __repr__(self) -> str:

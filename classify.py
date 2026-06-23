@@ -1,4 +1,4 @@
-"""Harvard spectral classification and plain-language colour names."""
+"""Harvard spectral classification and plain-language color names."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def spectral_class(temperature_k: float) -> SpectralType:
     return SpectralType(letter, desc)
 
 
-# (max_temp_K exclusive, name). The colours people actually perceive.
+# (max_temp_K exclusive, name). The colors people actually perceive.
 _APPEARANCE: List[Tuple[float, str]] = [
     (1200.0, "dim ember red"),
     (2200.0, "deep red"),
@@ -53,7 +53,7 @@ _APPEARANCE: List[Tuple[float, str]] = [
 
 
 def appearance_name(temperature_k: float) -> str:
-    """A friendly, perceptual colour name for a blackbody temperature."""
+    """A friendly, perceptual color name for a blackbody temperature."""
     for max_t, name in _APPEARANCE:
         if temperature_k < max_t:
             return name

@@ -1,6 +1,6 @@
-"""starhue — temperature → true star colour + Planck spectrum.
+"""starhue — temperature → true star color + Planck spectrum.
 
-Give it a temperature in kelvin; get back the actual sRGB colour a blackbody of
+Give it a temperature in kelvin; get back the actual sRGB color a blackbody of
 that temperature would show your eye, the spectral curve behind it, and a pile
 of derived physics (Wien peak, Stefan–Boltzmann exitance, spectral class).
 
@@ -47,7 +47,7 @@ __all__ = [
     "Star",
     "SpectralType",
     "spectral_class",
-    # colour
+    # color
     "temperature_to_hex",
     "temperature_to_rgb",
     "temperature_to_rgb01",
@@ -56,7 +56,7 @@ __all__ = [
     "wavelength_to_rgb",
     "hex_to_rgb",
     "rgb_to_xy",
-    # inverse CCT (colour → temperature)
+    # inverse CCT (color → temperature)
     "CCTResult",
     "cct_from_xy",
     "cct_from_uv",

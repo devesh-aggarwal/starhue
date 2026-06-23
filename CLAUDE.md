@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`starhue` converts a blackbody temperature (kelvin) into the true sRGB colour a
+`starhue` converts a blackbody temperature (kelvin) into the true sRGB color a
 star of that temperature shows the eye, plus the physics behind it (Planck
 spectrum, Wien peak, Stefan–Boltzmann exitance, Harvard spectral class). It also
-runs in reverse — colour → correlated colour temperature (CCT).
+runs in reverse — color → correlated color temperature (CCT).
 
 ## Key structural fact
 
@@ -29,8 +29,8 @@ There are **no third-party dependencies** — pure standard library (`math`,
 test suite, no linter config. Verify changes by running the CLI and the
 doctests/examples in the README.
 
-This is a deliberately **basic** package: the surface is forward colour
-(temperature → sRGB), inverse CCT (colour → temperature), and the terminal star
+This is a deliberately **basic** package: the surface is forward color
+(temperature → sRGB), inverse CCT (color → temperature), and the terminal star
 card. SVG export, gradient strips, JSON output, and Doppler shifting were
 removed to keep it simple — they may be re-added later.
 
@@ -40,7 +40,7 @@ removed to keep it simple — they may be re-added later.
 # Run the CLI (from the parent directory)
 python -m starhue 5772                    # a card for the Sun
 python -m starhue 3000 5772 9940          # several cards at once
-python -m starhue --from-color '#ffd1a3'  # inverse: colour → temperature
+python -m starhue --from-color '#ffd1a3'  # inverse: color → temperature
 python -m starhue 5772 --no-spectrum      # card without the sparkline
 
 # Smoke-test the public API (no test framework is installed)
@@ -49,7 +49,7 @@ python -c "import starhue; print(starhue.temperature_to_hex(5772))"  # -> #fff1e
 
 ## Architecture & data flow
 
-The forward pipeline (temperature → colour) is a one-way dependency chain;
+The forward pipeline (temperature → color) is a one-way dependency chain;
 respect its layering when editing:
 
 ```
@@ -65,23 +65,23 @@ constants  →  physics  →  color  →  cct       (cct inverts color/physics)
 - **`physics.py`** — Planck's law (`planck`/`planck_nm`), Wien peak
   (wavelength + frequency forms), Stefan–Boltzmann, and spectrum sampling.
 - **`color.py`** — the colorimetry pipeline: sample Planck across the visible
-  band → integrate against CIE 1931 colour-matching functions → XYZ → linear
-  sRGB (D65) → gamut-clamp → luminance-normalise → gamma-encode. The CMFs use
+  band → integrate against CIE 1931 color-matching functions → XYZ → linear
+  sRGB (D65) → gamut-clamp → luminance-normalize → gamma-encode. The CMFs use
   the **Wyman–Sloan–Shirley (2013)** analytic Gaussian fit, so there is **no
   embedded CIE data table** — keep it that way.
-- **`cct.py`** — the inverse: colour → nearest point on the Planckian locus in
+- **`cct.py`** — the inverse: color → nearest point on the Planckian locus in
   CIE 1960 *uv*, returning a `CCTResult(temperature_k, duv)`. It round-trips
   with the forward model, so changes to `color.py` chromaticity output must keep
   `cct` consistent.
 - **`classify.py`** — Harvard spectral class (O/B/A/F/G/K/M) and perceptual
-  colour names from temperature.
+  color names from temperature.
 - **`star.py`** — `Star`, the high-level facade. It owns no physics; every
   property delegates to the modules above. Inverse constructors
   (`from_hex`/`from_rgb`/`from_color`) go through `cct`. New user-facing
   capabilities should usually surface here.
 - **`render.py` / `cli.py`** — presentation only (terminal card + spectrum
   sparkline, argparse front-end). They consume `Star`; no science lives here.
-  Colour output honours `NO_COLOR` / `FORCE_COLOR`.
+  Color output honours `NO_COLOR` / `FORCE_COLOR`.
 
 The public API surface is defined explicitly by `__all__` in `__init__.py` — when
 adding an exported function, register it there (and in the relevant module's

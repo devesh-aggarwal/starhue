@@ -2,7 +2,7 @@
 
     starhue 5772                      # one star card
     starhue 3000 5772 9940           # several cards
-    starhue --from-color '#ffd1a3'   # inverse: a colour → its nearest blackbody
+    starhue --from-color '#ffd1a3'   # inverse: a color → its nearest blackbody
 """
 
 from __future__ import annotations
@@ -21,8 +21,8 @@ from .star import Star
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="starhue",
-        description="Temperature → true star colour + Planck spectrum.",
-        epilog="Give a temperature in kelvin (e.g. 5772 for the Sun) and see its real colour.",
+        description="Temperature → true star color + Planck spectrum.",
+        epilog="Give a temperature in kelvin (e.g. 5772 for the Sun) and see its real color.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("temperatures", nargs="*", type=float, help="one or more temperatures in kelvin")
@@ -32,11 +32,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--from-color",
         metavar="COLOR",
-        help="inverse mode: a colour (#rrggbb or r,g,b) → its nearest blackbody",
+        help="inverse mode: a color (#rrggbb or r,g,b) → its nearest blackbody",
     )
     color = p.add_mutually_exclusive_group()
-    color.add_argument("--color", dest="color", action="store_true", default=None, help="force ANSI colour")
-    color.add_argument("--no-color", dest="color", action="store_false", help="disable ANSI colour")
+    color.add_argument("--color", dest="color", action="store_true", default=None, help="force ANSI color")
+    color.add_argument("--no-color", dest="color", action="store_false", help="disable ANSI color")
     p.add_argument("--version", action="version", version=f"starhue {__version__}")
     return p
 
@@ -48,7 +48,7 @@ def _validate_temps(temps: Sequence[float]) -> None:
 
 
 def _parse_color(value: str) -> tuple:
-    """Parse a CLI colour: ``#rrggbb``/``#rgb`` or ``r,g,b``."""
+    """Parse a CLI color: ``#rrggbb``/``#rgb`` or ``r,g,b``."""
     s = value.strip()
     if "," in s:
         parts = s.split(",")
@@ -57,7 +57,7 @@ def _parse_color(value: str) -> tuple:
         try:
             return tuple(max(0, min(255, int(p))) for p in parts)
         except ValueError:
-            raise SystemExit(f"starhue: invalid r,g,b colour {value!r}") from None
+            raise SystemExit(f"starhue: invalid r,g,b color {value!r}") from None
     try:
         return hex_to_rgb(s)
     except ValueError as exc:
@@ -68,7 +68,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = _build_parser().parse_args(argv)
     use_color = supports_color() if args.color is None else args.color
 
-    # --- inverse mode: a colour → its nearest blackbody --------------------
+    # --- inverse mode: a color → its nearest blackbody --------------------
     if args.from_color:
         rgb = _parse_color(args.from_color)
         result = cct_from_rgb(rgb)
