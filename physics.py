@@ -16,10 +16,6 @@ __all__ = [
     "wien_peak_frequency",
     "stefan_boltzmann",
     "spectrum",
-    "doppler_wavelength_factor",
-    "relativistic_doppler_temperature",
-    "redshift_from_beta",
-    "beta_from_redshift",
 ]
 
 #: Root of ``(x - 3)·eˣ + 3 = 0`` — the dimensionless peak of the Planck curve
@@ -95,50 +91,6 @@ def stefan_boltzmann(temperature_k: float) -> float:
     """Total radiant exitance of a blackbody, in W·m⁻² (Stefan–Boltzmann law: σT⁴)."""
     _check_temperature(temperature_k)
     return SIGMA * temperature_k**4
-
-
-def _check_beta(beta: float) -> None:
-    if not math.isfinite(beta) or not -1.0 < beta < 1.0:
-        raise ValueError(f"beta (v/c) must lie strictly between -1 and 1, got {beta!r}")
-
-
-def doppler_wavelength_factor(beta: float) -> float:
-    """Relativistic Doppler stretch ``λ_observed / λ_emitted`` for radial motion.
-
-    ``beta`` is the line-of-sight velocity as a fraction of *c*, with the
-    astronomical sign convention: ``beta > 0`` means **receding** (redshift,
-    factor > 1), ``beta < 0`` means **approaching** (blueshift, factor < 1).
-    """
-    _check_beta(beta)
-    return math.sqrt((1.0 + beta) / (1.0 - beta))
-
-
-def relativistic_doppler_temperature(temperature_k: float, beta: float) -> float:
-    """Apparent temperature of a blackbody moving at ``beta`` (v/c).
-
-    A Doppler-shifted blackbody is *still* a blackbody — every wavelength scales
-    by the same factor — so its spectrum looks thermal at a shifted temperature
-    ``T·√((1−β)/(1+β))``. Receding sources look cooler and redder; approaching
-    sources look hotter and bluer.
-
-    Note this captures the spectral *shape and colour* only; relativistic
-    beaming of the overall intensity is not modelled.
-    """
-    _check_temperature(temperature_k)
-    return temperature_k / doppler_wavelength_factor(beta)
-
-
-def redshift_from_beta(beta: float) -> float:
-    """Radial velocity (as ``beta = v/c``) → redshift ``z`` (negative for blueshift)."""
-    return doppler_wavelength_factor(beta) - 1.0
-
-
-def beta_from_redshift(z: float) -> float:
-    """Redshift ``z`` → radial velocity as ``beta = v/c`` (inverse of :func:`redshift_from_beta`)."""
-    if z <= -1.0:
-        raise ValueError(f"redshift z must be greater than -1, got {z!r}")
-    f = (1.0 + z) ** 2
-    return (f - 1.0) / (f + 1.0)
 
 
 def spectrum(

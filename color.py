@@ -1,14 +1,14 @@
-"""From a Planck spectrum to a real sRGB colour.
+"""From a Planck spectrum to a real sRGB color.
 
 The pipeline is the textbook colorimetry route:
 
 1. Sample the Planck curve across the visible band.
-2. Integrate against the CIE 1931 2° colour-matching functions → CIE XYZ.
+2. Integrate against the CIE 1931 2° color-matching functions → CIE XYZ.
 3. Map XYZ → linear sRGB with the standard D65 matrix.
-4. Clamp out-of-gamut negatives, normalise to constant luminance, gamma-encode.
+4. Clamp out-of-gamut negatives, normalize to constant luminance, gamma-encode.
 
-The colour-matching functions use the analytic multi-lobe Gaussian fit of
-Wyman, Sloan & Shirley, *"Simple Analytic Approximations to the CIE XYZ Colour
+The color-matching functions use the analytic multi-lobe Gaussian fit of
+Wyman, Sloan & Shirley, *"Simple Analytic Approximations to the CIE XYZ Color
 Matching Functions"*, JCGT 2(2), 2013. It reproduces the tabulated CIE curves
 to within ~1% with no embedded data table.
 """
@@ -53,7 +53,7 @@ _XYZ_TO_RGB = (
 )
 
 # The forward direction (linear sRGB → CIE XYZ, D65), used to read the
-# chromaticity *out* of a colour for inverse-CCT work.
+# chromaticity *out* of a color for inverse-CCT work.
 _RGB_TO_XYZ = (
     (0.4123908, 0.3575843, 0.1804808),
     (0.2126390, 0.7151687, 0.0721923),
@@ -79,7 +79,7 @@ def _matmul3(
 
 
 def cie_1931_xyz(wavelength_nm: float) -> Tuple[float, float, float]:
-    """CIE 1931 2° colour-matching functions ``(x̄, ȳ, z̄)`` at one wavelength.
+    """CIE 1931 2° color-matching functions ``(x̄, ȳ, z̄)`` at one wavelength.
 
     Analytic multi-lobe Gaussian approximation (Wyman, Sloan & Shirley 2013).
     """
@@ -97,7 +97,7 @@ def cie_1931_xyz(wavelength_nm: float) -> Tuple[float, float, float]:
 def spectrum_to_xyz(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, float, float]:
     """Integrate a blackbody spectrum against the CMFs to get CIE XYZ.
 
-    The absolute scale is irrelevant for hue (we normalise later), so the
+    The absolute scale is irrelevant for hue (we normalize later), so the
     integration constant is dropped.
     """
     if step_nm <= 0:
@@ -132,16 +132,16 @@ def _gamma_encode(c: float) -> float:
 def xyz_to_srgb(x: float, y: float, z: float) -> Tuple[float, float, float]:
     """CIE XYZ → display sRGB as three floats in ``[0, 1]``.
 
-    Out-of-gamut negatives are clamped to zero and the result is normalised to
-    constant maximum luminance, so the returned colour is the *hue* of the
-    blackbody at full brightness (the conventional way to show star colours).
+    Out-of-gamut negatives are clamped to zero and the result is normalized to
+    constant maximum luminance, so the returned color is the *hue* of the
+    blackbody at full brightness (the conventional way to show star colors).
     """
     r, g, b = _matmul3(_XYZ_TO_RGB, x, y, z)
 
-    # Clamp impossible (negative) colours back into gamut.
+    # Clamp impossible (negative) colors back into gamut.
     r, g, b = max(0.0, r), max(0.0, g), max(0.0, b)
 
-    # Normalise to constant luminance: brightest primary becomes 1.0.
+    # Normalize to constant luminance: brightest primary becomes 1.0.
     peak = max(r, g, b)
     if peak > 0:
         r, g, b = r / peak, g / peak, b / peak
@@ -177,20 +177,20 @@ def temperature_to_hex(temperature_k: float, step_nm: float = 1.0) -> str:
 
 
 def wavelength_to_rgb(wavelength_nm: float) -> Tuple[int, int, int]:
-    """Display colour of a single monochromatic wavelength (0–255).
+    """Display color of a single monochromatic wavelength (0–255).
 
     Used to paint spectrum plots. The hue follows the spectral ramp
     (violet→blue→cyan→green→yellow→red) across the ~400–700 nm visible window,
     held at full brightness so the visible edges stay vivid. Past that window the
-    colour dims smoothly to black — through the UV below 400 nm and the infrared
+    color dims smoothly to black — through the UV below 400 nm and the infrared
     above 700 nm — because those wavelengths are invisible to the eye.
 
     The violet end stops at a true blue-violet rather than running all the way to
     magenta: pink/magenta is non-spectral (no single wavelength looks pink), so
     no star and no rainbow should show it.
 
-    The CIE colour-matching functions are deliberately *not* used for the hue:
-    their near-zero tails past ~700 nm cross over, and once renormalised to full
+    The CIE color-matching functions are deliberately *not* used for the hue:
+    their near-zero tails past ~700 nm cross over, and once renormalized to full
     brightness that flips deep red back to pure green (the ȳ tail outlives x̄).
     """
     wh = min(700.0, max(400.0, wavelength_nm))  # hue plateau: violet 400 → red 700
@@ -226,7 +226,7 @@ def _to_8bit(c: float) -> int:
 
 
 # --------------------------------------------------------------------------
-# Inverse direction: a display colour → chromaticity (for inverse CCT).
+# Inverse direction: a display color → chromaticity (for inverse CCT).
 # --------------------------------------------------------------------------
 
 
@@ -243,11 +243,11 @@ def hex_to_rgb(value: str) -> Tuple[int, int, int]:
     if len(s) == 3:
         s = "".join(ch * 2 for ch in s)
     if len(s) != 6:
-        raise ValueError(f"not a hex colour: {value!r}")
+        raise ValueError(f"not a hex color: {value!r}")
     try:
         return int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16)
     except ValueError:
-        raise ValueError(f"not a hex colour: {value!r}") from None
+        raise ValueError(f"not a hex color: {value!r}") from None
 
 
 def srgb_to_xyz(r: float, g: float, b: float) -> Tuple[float, float, float]:

@@ -1,8 +1,8 @@
 # starhue
 
-**Temperature → the colour of a star, plus its Planck spectrum.**
+**Temperature → the color of a star, plus its Planck spectrum.**
 
-`starhue` takes a temperature value in Kelvin, and returns the actual sRGB colour that a
+`starhue` takes a temperature value in kelvin, and returns the actual sRGB color that a
 blackbody of that temperature would show to your eye. 
 
 <p align="center">
@@ -19,9 +19,8 @@ source — from the directory that **contains** `starhue/`:
 ```bash
 python -m starhue 5772            # the Sun
 python -m starhue 3500 5772 12100 # several stars at once
-python -m starhue --range 1000 12000   # a gradient strip across the locus
-python -m starhue 5772 --svg sun.svg   # write a showcase SVG
-python -m starhue 3500 --json          # machine-readable summary
+python -m starhue --from-color '#ffd1a3'   # inverse: a color → its nearest blackbody
+python -m starhue 5772 --no-spectrum       # card without the sparkline
 ```
 
 ```text
@@ -40,7 +39,7 @@ python -m starhue 3500 --json          # machine-readable summary
 ╰────────────────────────────────────────────────╯
 ```
 
-*(In a real terminal the swatch and spectrum sparkline are full 24-bit colour.)*
+*(In a real terminal the swatch and spectrum sparkline are full 24-bit color.)*
 
 ## Python API
 
@@ -62,18 +61,17 @@ star.peak_frequency_hz    # 3.39e14   — frequency-form Wien's law
 star.radiant_exitance     # 6.29e7 W/m²  — Stefan–Boltzmann
 star.spectral_type.letter # 'G'
 star.appearance           # 'neutral white'
-star.to_dict()            # everything, JSON-ready
 
 # The raw spectrum: list of (wavelength_nm, radiance)
 star.spectrum(380, 750, samples=100, normalize=True)
 ```
 
-### Inverse: colour → temperature (CCT)
+### Inverse: color → temperature (CCT)
 
-Go the other way too. The correlated colour temperature is the nearest point on
+Go the other way too. The correlated color temperature is the nearest point on
 the Planckian locus in CIE 1960 *uv* space, so it round-trips with the forward
 model. You also get **Duv** — the signed distance from the locus (≈0 means the
-colour really is blackbody-like; + is the green side, − the pink side).
+color really is blackbody-like; + is the green side, − the pink side).
 
 ```python
 starhue.cct_from_hex('#ffd1a3')   # CCTResult(temperature_k=3911.0, duv=-0.0012)
@@ -83,29 +81,100 @@ starhue.Star.from_hex('#fff1ea')  # Star(5773 K, #fff1ea, class G)
 starhue.Star.from_color((255, 200, 140))
 ```
 
-### Doppler shift
+## Full API reference
 
-A relativistically Doppler-shifted blackbody is *still* a blackbody at a shifted
-temperature, so motion just gives you another `Star`. Positive velocity =
-receding (redshift, cooler & redder); negative = approaching (bluer).
+These are the functions and objects you call. They're re-exported onto the
+top-level `starhue` namespace, so `import starhue` is enough to reach all of
+them; the table notes which submodule each lives in if you'd rather import from
+there.
 
-```python
-sun = starhue.Star(5772)
-sun.doppler_shifted(beta=0.3)         # Star(4235 K, …)  — receding at 0.3c
-sun.doppler_shifted(velocity_kms=-500)
-sun.doppler_shifted(redshift=1.0).temperature   # 2886.0  (= T / (1+z))
+### Forward — temperature → color
 
-starhue.relativistic_doppler_temperature(5772, 0.3)   # 4235.5
-```
+| Name | Signature → returns | Description |
+|---|---|---|
+| `temperature_to_hex` | `(temperature_k, step_nm=1.0) → str` | Temperature → `#rrggbb` sRGB hex string. |
+| `temperature_to_rgb` | `(temperature_k, step_nm=1.0) → (int, int, int)` | Temperature → display sRGB `(r, g, b)`, 0–255. |
+| `temperature_to_rgb01` | `(temperature_k, step_nm=1.0) → (float, float, float)` | Temperature → display sRGB, three floats in `[0, 1]`. |
+| `temperature_to_xy` | `(temperature_k, step_nm=1.0) → (float, float)` | Temperature → CIE 1931 chromaticity `(x, y)`. |
+| `temperature_to_xyz` | `(temperature_k, step_nm=1.0) → (float, float, float)` | Temperature → CIE 1931 XYZ tristimulus values. |
+| `wavelength_to_rgb` | `(wavelength_nm) → (int, int, int)` | Display color of a single monochromatic wavelength (for spectrum plots). |
 
-Lower-level physics and colour functions live in `starhue.physics` and
-`starhue.color`:
+### Inverse — color → temperature
 
-```python
-from starhue.physics import planck, wien_peak_wavelength, stefan_boltzmann
-from starhue.color import temperature_to_rgb, wavelength_to_rgb, cie_1931_xyz
-from starhue.cct import cct_from_xy, cct_from_uv
-```
+| Name | Signature → returns | Description |
+|---|---|---|
+| `cct_from_hex` | `(value) → CCTResult` | Nearest blackbody (+ Duv) for a `#rrggbb` color. |
+| `cct_from_rgb` | `(rgb) → CCTResult` | Nearest blackbody (+ Duv) for an sRGB `(r, g, b)` 0–255 color. |
+| `cct_from_xy` | `(x, y) → CCTResult` | Nearest blackbody (+ Duv) for a CIE 1931 `(x, y)` color. |
+| `cct_from_uv` | `(u, v) → CCTResult` | Nearest blackbody (+ Duv) for a CIE 1960 `(u, v)` color. |
+| `hex_to_rgb` | `(value) → (int, int, int)` | Parse `#rgb`/`#rrggbb` → `(r, g, b)`, 0–255. |
+| `rgb_to_xy` | `(rgb) → (float, float)` | sRGB `(r, g, b)` 0–255 → CIE 1931 chromaticity `(x, y)`. |
+| `CCTResult` | `NamedTuple(temperature_k, duv)` | What the `cct_from_*` functions return; `duv` is the signed distance from the locus. |
+
+### Physics
+
+| Name | Signature → returns | Description |
+|---|---|---|
+| `planck` | `(wavelength_m, temperature_k) → float` | Planck spectral radiance, W·sr⁻¹·m⁻³ (wavelength in **metres**). |
+| `planck_nm` | `(wavelength_nm, temperature_k) → float` | Planck spectral radiance per nm (wavelength in **nanometres**). |
+| `spectrum` | `(temperature_k, lo_nm=300, hi_nm=1100, samples=200, *, normalize=False) → list[(float, float)]` | Sample the Planck curve → `(wavelength_nm, radiance)` pairs. |
+| `wien_peak_wavelength` | `(temperature_k) → float` | Wavelength of peak radiance (Wien), **metres**. |
+| `wien_peak_wavelength_nm` | `(temperature_k) → float` | Wavelength of peak radiance (Wien), **nm**. |
+| `wien_peak_frequency` | `(temperature_k) → float` | Frequency of peak radiance (frequency-form Wien), Hz. |
+| `stefan_boltzmann` | `(temperature_k) → float` | Total radiant exitance σT⁴, W·m⁻². |
+
+### Classification
+
+| Name | Signature → returns | Description |
+|---|---|---|
+| `spectral_class` | `(temperature_k) → SpectralType` | Harvard spectral type (O/B/A/F/G/K/M) for an effective temperature. |
+| `appearance_name` | `(temperature_k) → str` | Friendly perceptual color name, e.g. `"warm amber"` *(in `starhue.classify`)*. |
+| `SpectralType` | `NamedTuple(letter, description)` | What `spectral_class` returns. |
+
+### Terminal rendering (`starhue.render`)
+
+| Name | Signature → returns | Description |
+|---|---|---|
+| `star_card` | `(star, *, color=True, spectrum=True, width=46) → str` | Multi-line "trading card": swatch, stats and spectrum. |
+| `spectrum_sparkline` | `(star, width=48, lo_nm=300, hi_nm=1100, *, color=True) → str` | One-line Unicode Planck-curve sparkline, tinted by wavelength. |
+| `swatch` | `(rgb, width=6, *, color=True) → str` | A solid color bar of `width` cells. |
+| `supports_color` | `(stream=None) → bool` | Best-effort 24-bit color detection (honours `NO_COLOR` / `FORCE_COLOR`). |
+
+### The `Star` object (`starhue.Star`)
+
+`Star(temperature_k, *, color_step_nm=1.0)` — the high-level facade. The keyword
+`color_step_nm` is the wavelength step (nm) of the color integration; smaller is
+more accurate but slower.
+
+**Inverse constructors** (color → nearest blackbody):
+
+| Constructor | Signature → returns | Description |
+|---|---|---|
+| `Star.from_rgb` | `(rgb) → Star` | From an sRGB `(r, g, b)` triple (0–255). |
+| `Star.from_hex` | `(value) → Star` | From a `#rrggbb` string. |
+| `Star.from_color` | `(color_value) → Star` | From either a hex string or an `(r, g, b)` triple. |
+
+**Attributes, properties & methods:**
+
+| Member | Kind | Type / returns | Description |
+|---|---|---|---|
+| `temperature` | attribute | `float` | The star's temperature, K. |
+| `rgb` | property | `(int, int, int)` | Display sRGB color, 0–255. |
+| `rgb01` | property | `(float, float, float)` | Display sRGB color, floats in `[0, 1]`. |
+| `hex` | property | `str` | Display sRGB color as `#rrggbb`. |
+| `xyz` | property | `(float, float, float)` | CIE 1931 XYZ tristimulus values. |
+| `chromaticity` | property | `(float, float)` | CIE 1931 chromaticity `(x, y)`. |
+| `peak_wavelength_nm` | property | `float` | Wien peak wavelength, nm. |
+| `peak_frequency_hz` | property | `float` | Wien peak frequency (frequency form), Hz. |
+| `radiant_exitance` | property | `float` | Stefan–Boltzmann exitance, W·m⁻². |
+| `spectral_type` | property | `SpectralType` | Harvard spectral classification. |
+| `appearance` | property | `str` | Friendly perceptual color name, e.g. `"neutral white"`. |
+| `planck(wavelength_nm)` | method | `float` | Spectral radiance at a wavelength in nm. |
+| `spectrum(lo_nm=300, hi_nm=1100, samples=200, *, normalize=False)` | method | `list[(float, float)]` | Sample the Planck curve → `(wavelength_nm, radiance)` pairs. |
+
+Anything not listed here (the colorimetry conversion steps in `starhue.color`,
+the physical constants in `starhue.constants`) is internal plumbing the functions
+above build on — usable, but not the intended surface.
 
 ## The science
 
@@ -119,14 +188,14 @@ $$B_\lambda(T) = \frac{2hc^2}{\lambda^5}\,\frac{1}{\exp\!\left(\dfrac{hc}{\lambd
 
 **Stefan–Boltzmann law** — total power radiated per unit area: $j^\star = \sigma T^4$.
 
-**Temperature → colour** follows the standard colorimetry pipeline:
+**Temperature → color** follows the standard colorimetry pipeline:
 
 1. Sample the Planck curve across the visible band (360–830 nm).
-2. Integrate against the **CIE 1931 2° colour-matching functions** → CIE *XYZ*.
+2. Integrate against the **CIE 1931 2° color-matching functions** → CIE *XYZ*.
 3. Map *XYZ* → linear sRGB with the D65 matrix.
-4. Clamp out-of-gamut negatives, normalise to constant luminance, gamma-encode.
+4. Clamp out-of-gamut negatives, normalize to constant luminance, gamma-encode.
 
-The colour-matching functions use the analytic multi-lobe Gaussian fit of
+The color-matching functions use the analytic multi-lobe Gaussian fit of
 **Wyman, Sloan & Shirley (2013)**, which reproduces the tabulated CIE curves to
 within ~1% with no embedded data table.
 
@@ -141,7 +210,7 @@ Yes — it lands on the textbook reference points:
 | 3500 K | `#ffc88c` | amber (an M-type red giant) |
 | 12000 K | bluish white | hot B-type star |
 
-The full Planckian locus matches Mitchell Charity's well-known blackbody-colour
+The full Planckian locus matches Mitchell Charity's well-known blackbody-color
 table closely.
 
 ## Gallery
@@ -158,12 +227,6 @@ A hot blue star, peak pushed into the ultraviolet:
   <img src="assets/rigel.png" alt="12100 K B-type star" width="560">
 </p>
 
-The blackbody locus from ember-red to icy blue:
-
-<p align="center">
-  <img src="assets/gradient.png" alt="blackbody colour gradient 1000–15000 K" width="800">
-</p>
-
 ## CLI reference
 
 ```
@@ -173,39 +236,29 @@ positional:
   TEMPERATURES        one or more temperatures in kelvin (default: 5772, the Sun)
 
 options:
-  --range MIN MAX     render a gradient strip across this temperature range
-  --steps N           number of steps in the gradient strip
-  --svg PATH          write an SVG (a card for one temp, a strip for many)
-  --json              emit a JSON summary instead of a card
   --no-spectrum       hide the spectrum sparkline in cards
-  --from-color COLOR  inverse mode: a colour (#rrggbb or r,g,b) → its nearest blackbody
-  --beta B            Doppler shift by radial velocity v/c (+ = receding)
-  --velocity-kms V    Doppler shift by radial velocity in km/s
-  --redshift Z        Doppler shift by redshift z
-  --color / --no-color   force or disable ANSI colour (auto-detected by default)
+  --from-color COLOR  inverse mode: a color (#rrggbb or r,g,b) → its nearest blackbody
+  --color / --no-color   force or disable ANSI color (auto-detected by default)
   --version
 ```
 
 ```bash
-starhue --from-color '#ffd1a3'   # what temperature is this colour?
-starhue 5772 --beta 0.3          # the Sun receding at 0.3c
-starhue --range 1000 12000 --redshift 0.5   # a redshifted gradient
+starhue --from-color '#ffd1a3'   # what temperature is this color?
 ```
 
-Colour output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
+Color output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
 
 ## Module map
 
 | module | role |
 |---|---|
 | `constants` | exact SI / CODATA physical constants |
-| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, Doppler shift, spectrum sampling |
-| `color` | CIE 1931 CMF → XYZ → sRGB; chromaticity; wavelength → display colour |
-| `cct` | inverse direction: colour → correlated colour temperature + Duv |
-| `classify` | Harvard spectral class + perceptual colour names |
+| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, spectrum sampling |
+| `color` | CIE 1931 CMF → XYZ → sRGB; chromaticity; wavelength → display color |
+| `cct` | inverse direction: color → correlated color temperature + Duv |
+| `classify` | Harvard spectral class + perceptual color names |
 | `star` | the high-level `Star` object |
-| `render` | terminal cards, spectrum sparkline, gradient strip |
-| `svg` | dependency-free showcase SVG export |
+| `render` | terminal card + spectrum sparkline |
 | `cli` | the command-line interface |
 
 ## References
@@ -215,7 +268,7 @@ Colour output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
 - C. Wyman, P. Sloan & P. Shirley, *Simple Analytic Approximations to the CIE
   XYZ Color Matching Functions*, **JCGT** 2(2), 2013.
 - IEC 61966-2-1:1999 (sRGB).
-- M. Charity, *What color is a blackbody?* — reference colour table.
+- M. Charity, *What color is a blackbody?* — reference color table.
 
 ## License
 
