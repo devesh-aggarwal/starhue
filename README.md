@@ -2,7 +2,7 @@
 
 **Temperature → the colour of a star, plus its Planck spectrum.**
 
-`starhue` takes a temperature value in kelvin, and returns the actual sRGB colour that a
+`starhue` takes a temperature value in Kelvin, and returns the actual sRGB colour that a
 blackbody of that temperature would show to your eye. 
 
 <p align="center">
