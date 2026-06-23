@@ -30,12 +30,8 @@ from .color import (
     wavelength_to_rgb,
 )
 from .physics import (
-    beta_from_redshift,
-    doppler_wavelength_factor,
     planck,
     planck_nm,
-    redshift_from_beta,
-    relativistic_doppler_temperature,
     spectrum,
     stefan_boltzmann,
     wien_peak_frequency,
@@ -74,9 +70,4 @@ __all__ = [
     "wien_peak_wavelength",
     "wien_peak_wavelength_nm",
     "wien_peak_frequency",
-    # Doppler
-    "relativistic_doppler_temperature",
-    "doppler_wavelength_factor",
-    "redshift_from_beta",
-    "beta_from_redshift",
 ]

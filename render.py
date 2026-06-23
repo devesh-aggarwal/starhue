@@ -1,5 +1,5 @@
-"""Terminal rendering: truecolor swatches, a rainbow spectrum sparkline, and
-gradient strips. Pure stdlib, no dependencies.
+"""Terminal rendering: truecolor swatches and a rainbow spectrum sparkline,
+wrapped into a star "trading card". Pure stdlib, no dependencies.
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ __all__ = [
     "swatch",
     "spectrum_sparkline",
     "star_card",
-    "gradient_strip",
 ]
 
 _RESET = "\x1b[0m"
@@ -172,43 +171,3 @@ def star_card(star: Star, *, color: bool = True, spectrum: bool = True, width: i
     texts = [t for t, _ in rows]
     widths = [w for _, w in rows]
     return _frame(texts, widths)
-
-
-def gradient_strip(
-    t_min: float,
-    t_max: float,
-    steps: int = 24,
-    *,
-    color: bool = True,
-    labels: bool = True,
-    cell_width: int = 2,
-) -> str:
-    """A horizontal bar sweeping the blackbody locus from ``t_min`` to ``t_max``.
-
-    Each cell is one temperature step; with ``labels`` the endpoints and a
-    couple of interior temperatures are annotated below.
-    """
-    if steps < 2:
-        raise ValueError("steps must be >= 2")
-    temps = [t_min + (t_max - t_min) * i / (steps - 1) for i in range(steps)]
-    cells = []
-    for t in temps:
-        rgb = _color.temperature_to_rgb(t)
-        cells.append(_bg(rgb) + " " * cell_width + _RESET if color else _FULL * cell_width)
-    bar = "".join(cells)
-    if not labels:
-        return bar
-
-    total = steps * cell_width
-    marks = [0, steps // 2, steps - 1]
-    label_row = [" "] * total
-    for m in marks:
-        text = f"{round(temps[m])}K"
-        start = m * cell_width
-        # keep the label on-screen
-        start = min(start, total - len(text))
-        start = max(0, start)
-        for i, ch in enumerate(text):
-            if start + i < total:
-                label_row[start + i] = ch
-    return bar + "\n" + "".join(label_row)

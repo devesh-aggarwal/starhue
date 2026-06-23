@@ -27,7 +27,4 @@ C1L = 2.0 * H * C * C
 #: Second radiation constant, h·c / k_B, m·K.
 C2 = H * C / K_B
 
-#: Effective temperature of the Sun, K — a convenient reference point.
-T_SUN = 5772.0
-
-__all__ = ["H", "C", "K_B", "SIGMA", "WIEN_B", "C1L", "C2", "T_SUN"]
+__all__ = ["H", "C", "K_B", "SIGMA", "WIEN_B", "C1L", "C2"]
