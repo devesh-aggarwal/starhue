@@ -1,7 +1,4 @@
-"""The blackbody physics: Planck's law, Wien's law, Stefan–Boltzmann.
-
-Everything here is pure-Python stdlib (just :mod:`math`), exact, and cheap to
-test against analytic identities.
+"""Physics of the blackbody follows Planck's law, Wien's law, Stefan–Boltzmann.
 """
 
 from __future__ import annotations
@@ -56,7 +53,7 @@ def planck(wavelength_m: float, temperature_k: float) -> float:
     if not math.isfinite(wavelength_m) or wavelength_m <= 0:
         raise ValueError(f"wavelength must be a positive number of metres, got {wavelength_m!r}")
     x = C2 / (wavelength_m * temperature_k)
-    # Guard the exponential: for large x the radiance is effectively zero, and
+    # for large x the radiance is effectively zero, and
     # math.expm1 would otherwise raise OverflowError around x ~ 709.
     if x > 700.0:
         return 0.0
@@ -66,7 +63,7 @@ def planck(wavelength_m: float, temperature_k: float) -> float:
 def planck_nm(wavelength_nm: float, temperature_k: float) -> float:
     """Planck spectral radiance for a wavelength given in **nanometres**.
 
-    Returns radiance per nanometre (W·sr⁻¹·m⁻²·nm⁻¹), the convenient unit for
+    Returns radiance per nanometre (W·sr⁻¹·m⁻²·nm⁻¹), useful for
     plotting against a wavelength axis in nm.
     """
     return planck(wavelength_nm * 1e-9, temperature_k) * 1e-9
