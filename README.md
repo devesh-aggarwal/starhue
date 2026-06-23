@@ -19,9 +19,8 @@ source — from the directory that **contains** `starhue/`:
 ```bash
 python -m starhue 5772            # the Sun
 python -m starhue 3500 5772 12100 # several stars at once
-python -m starhue --range 1000 12000   # a gradient strip across the locus
-python -m starhue 5772 --svg sun.svg   # write a showcase SVG
-python -m starhue 3500 --json          # machine-readable summary
+python -m starhue --from-color '#ffd1a3'   # inverse: a colour → its nearest blackbody
+python -m starhue 5772 --no-spectrum       # card without the sparkline
 ```
 
 ```text
@@ -62,7 +61,6 @@ star.peak_frequency_hz    # 3.39e14   — frequency-form Wien's law
 star.radiant_exitance     # 6.29e7 W/m²  — Stefan–Boltzmann
 star.spectral_type.letter # 'G'
 star.appearance           # 'neutral white'
-star.to_dict()            # everything, JSON-ready
 
 # The raw spectrum: list of (wavelength_nm, radiance)
 star.spectrum(380, 750, samples=100, normalize=True)
@@ -81,21 +79,6 @@ starhue.cct_from_rgb((205, 217, 255)).temperature_k   # ~10000
 
 starhue.Star.from_hex('#fff1ea')  # Star(5773 K, #fff1ea, class G)
 starhue.Star.from_color((255, 200, 140))
-```
-
-### Doppler shift
-
-A relativistically Doppler-shifted blackbody is *still* a blackbody at a shifted
-temperature, so motion just gives you another `Star`. Positive velocity =
-receding (redshift, cooler & redder); negative = approaching (bluer).
-
-```python
-sun = starhue.Star(5772)
-sun.doppler_shifted(beta=0.3)         # Star(4235 K, …)  — receding at 0.3c
-sun.doppler_shifted(velocity_kms=-500)
-sun.doppler_shifted(redshift=1.0).temperature   # 2886.0  (= T / (1+z))
-
-starhue.relativistic_doppler_temperature(5772, 0.3)   # 4235.5
 ```
 
 Lower-level physics and colour functions live in `starhue.physics` and
@@ -158,12 +141,6 @@ A hot blue star, peak pushed into the ultraviolet:
   <img src="assets/rigel.png" alt="12100 K B-type star" width="560">
 </p>
 
-The blackbody locus from ember-red to icy blue:
-
-<p align="center">
-  <img src="assets/gradient.png" alt="blackbody colour gradient 1000–15000 K" width="800">
-</p>
-
 ## CLI reference
 
 ```
@@ -173,23 +150,14 @@ positional:
   TEMPERATURES        one or more temperatures in kelvin (default: 5772, the Sun)
 
 options:
-  --range MIN MAX     render a gradient strip across this temperature range
-  --steps N           number of steps in the gradient strip
-  --svg PATH          write an SVG (a card for one temp, a strip for many)
-  --json              emit a JSON summary instead of a card
   --no-spectrum       hide the spectrum sparkline in cards
   --from-color COLOR  inverse mode: a colour (#rrggbb or r,g,b) → its nearest blackbody
-  --beta B            Doppler shift by radial velocity v/c (+ = receding)
-  --velocity-kms V    Doppler shift by radial velocity in km/s
-  --redshift Z        Doppler shift by redshift z
   --color / --no-color   force or disable ANSI colour (auto-detected by default)
   --version
 ```
 
 ```bash
 starhue --from-color '#ffd1a3'   # what temperature is this colour?
-starhue 5772 --beta 0.3          # the Sun receding at 0.3c
-starhue --range 1000 12000 --redshift 0.5   # a redshifted gradient
 ```
 
 Colour output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
@@ -199,13 +167,12 @@ Colour output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
 | module | role |
 |---|---|
 | `constants` | exact SI / CODATA physical constants |
-| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, Doppler shift, spectrum sampling |
+| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, spectrum sampling |
 | `color` | CIE 1931 CMF → XYZ → sRGB; chromaticity; wavelength → display colour |
 | `cct` | inverse direction: colour → correlated colour temperature + Duv |
 | `classify` | Harvard spectral class + perceptual colour names |
 | `star` | the high-level `Star` object |
-| `render` | terminal cards, spectrum sparkline, gradient strip |
-| `svg` | dependency-free showcase SVG export |
+| `render` | terminal card + spectrum sparkline |
 | `cli` | the command-line interface |
 
 ## References

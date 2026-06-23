@@ -4,11 +4,10 @@ pipelines together for one temperature.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
 from . import cct, color, physics
 from .classify import SpectralType, appearance_name, spectral_class
-from .constants import C
 
 __all__ = ["Star"]
 
@@ -52,32 +51,6 @@ class Star:
         if isinstance(color_value, str):
             return cls.from_hex(color_value)
         return cls.from_rgb(color_value)
-
-    # -- Doppler shift -------------------------------------------------------
-    def doppler_shifted(
-        self,
-        *,
-        beta: Optional[float] = None,
-        velocity_kms: Optional[float] = None,
-        redshift: Optional[float] = None,
-    ) -> "Star":
-        """Return a new :class:`Star` as this one would appear in radial motion.
-
-        Specify exactly one of ``beta`` (v/c), ``velocity_kms`` (km/s), or
-        ``redshift`` (z). Positive values mean **receding** (redshifted, cooler);
-        negative ``beta``/``velocity_kms`` (or ``-1 < z < 0``) mean approaching.
-        """
-        given = [v is not None for v in (beta, velocity_kms, redshift)]
-        if sum(given) != 1:
-            raise ValueError("pass exactly one of beta, velocity_kms or redshift")
-        if velocity_kms is not None:
-            beta = velocity_kms * 1000.0 / C
-        elif redshift is not None:
-            beta = physics.beta_from_redshift(redshift)
-        return Star(
-            physics.relativistic_doppler_temperature(self.temperature, beta),
-            color_step_nm=self._color_step_nm,
-        )
 
     # -- colour --------------------------------------------------------------
     @property
@@ -146,25 +119,6 @@ class Star:
     def appearance(self) -> str:
         """A friendly perceptual colour name, e.g. ``"neutral white"``."""
         return appearance_name(self.temperature)
-
-    # -- misc ----------------------------------------------------------------
-    def to_dict(self) -> Dict[str, Any]:
-        """A JSON-serialisable summary of everything known about the star."""
-        r, g, b = self.rgb
-        x, y = self.chromaticity
-        st = self.spectral_type
-        return {
-            "temperature_k": self.temperature,
-            "hex": self.hex,
-            "rgb": [r, g, b],
-            "chromaticity_xy": [x, y],
-            "peak_wavelength_nm": self.peak_wavelength_nm,
-            "peak_frequency_hz": self.peak_frequency_hz,
-            "radiant_exitance_w_m2": self.radiant_exitance,
-            "spectral_class": st.letter,
-            "spectral_description": st.description,
-            "appearance": self.appearance,
-        }
 
     def __repr__(self) -> str:
         return f"Star({self.temperature:g} K, {self.hex}, class {self.spectral_type.letter})"
