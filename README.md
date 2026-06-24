@@ -1,9 +1,10 @@
 # starhue
 
-**Temperature → the color of a star, plus its Planck spectrum.**
-
 `starhue` takes a temperature value in kelvin, and returns the actual sRGB color that a
-blackbody of that temperature would show to your eye. 
+blackbody of that temperature would show to your eye — along with the physics behind it:
+the Planck spectrum, the Wien peak, Stefan–Boltzmann exitance, and the Harvard spectral
+class. It also runs in reverse, turning a color back into a correlated color temperature
+(CCT), and renders it all as a star card in your terminal.
 
 <p align="center">
   <img src="starhue/assets/sun.png" alt="starhue card for the Sun (5772 K)" width="640">
@@ -11,17 +12,36 @@ blackbody of that temperature would show to your eye.
 
 ---
 
-## Quick start
+## Installation
 
-The project folder *is* the `starhue` package, so you can run it straight from
-source — from the directory that **contains** `starhue/`:
+`starhue` is pure standard library — no third-party dependencies, just Python 3.8+.
+Clone the repo and install it editable into a virtualenv:
 
 ```bash
-python -m starhue 5772            # the Sun
-python -m starhue 3500 5772 12100 # several stars at once
+git clone https://github.com/devesh-aggarwal/starhue.git
+cd starhue
+python -m venv .venv && source .venv/bin/activate
+python -m pip install -e .
+```
+
+There is nothing else to fetch. Confirm it works:
+
+```bash
+python -m starhue 5772        # should print a star card for the Sun
+```
+
+## Quick start
+
+The standard use case is one or more temperatures in kelvin → a star card per temperature:
+
+```bash
+python -m starhue 5772             # the Sun
+python -m starhue 3500 5772 12100  # several stars at once
 python -m starhue --from-color '#ffd1a3'   # inverse: a color → its nearest blackbody
 python -m starhue 5772 --no-spectrum       # card without the sparkline
 ```
+
+`python -m starhue 5772` prints:
 
 ```text
 ╭────────────────────────────────────────────────╮
@@ -38,7 +58,11 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 ╰────────────────────────────────────────────────╯
 ```
 
-*(In a real terminal the swatch and spectrum sparkline are full 24-bit color.)*
+Reading the card: the swatch with its `#rrggbb` / `rgb()` values is the star's display
+color; **peak λ** is the Wien peak wavelength (nm) and its frequency (Hz); **exitance** is
+the Stefan–Boltzmann radiant exitance (here in MW/m²); the sparkline is the Planck spectrum
+sampled 300–1100 nm, with ▲ marking the peak. *(In a real terminal the swatch and sparkline
+are full 24-bit color.)*
 
 ## Python API
 
@@ -79,7 +103,7 @@ starhue.Star.from_color('#fff1ea')        # Star(5773 K, #fff1ea, class G)
 starhue.Star.from_color((255, 200, 140))  # also takes an (r, g, b) triple
 ```
 
-## Full API reference
+## API reference
 
 These are the functions and objects you call. They're re-exported onto the
 top-level `starhue` namespace, so `import starhue` is enough to reach all of
@@ -158,6 +182,40 @@ Anything not listed here (the colorimetry conversion steps in `starhue.color`,
 the physical constants in `starhue.constants`) is internal plumbing the functions
 above build on — usable, but not the intended surface.
 
+## CLI reference
+
+```
+python -m starhue [TEMPERATURES ...] [options]
+
+positional:
+  TEMPERATURES        one or more temperatures in kelvin (default: 5772, the Sun)
+
+options:
+  --no-spectrum       hide the spectrum sparkline in cards
+  --from-color COLOR  inverse mode: a color (#rrggbb or r,g,b) → its nearest blackbody
+  --color / --no-color   force or disable ANSI color (auto-detected by default)
+  --version
+```
+
+```bash
+python -m starhue --from-color '#ffd1a3'   # what temperature is this color?
+```
+
+Color output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
+
+## Module map
+
+| module | role |
+|---|---|
+| `constants` | exact SI / CODATA physical constants |
+| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, spectrum sampling |
+| `color` | CIE 1931 CMF → XYZ → sRGB; chromaticity; wavelength → display color |
+| `cct` | inverse direction: color → correlated color temperature |
+| `classify` | Harvard spectral class + perceptual color names |
+| `star` | the high-level `Star` object |
+| `render` | terminal card + spectrum sparkline |
+| `cli` | the command-line interface |
+
 ## The science
 
 Everything is computed from first principles with the exact 2019-SI constants.
@@ -208,40 +266,6 @@ A hot blue star, peak pushed into the ultraviolet:
 <p align="center">
   <img src="starhue/assets/rigel.png" alt="12100 K B-type star" width="560">
 </p>
-
-## CLI reference
-
-```
-starhue [TEMPERATURES ...] [options]
-
-positional:
-  TEMPERATURES        one or more temperatures in kelvin (default: 5772, the Sun)
-
-options:
-  --no-spectrum       hide the spectrum sparkline in cards
-  --from-color COLOR  inverse mode: a color (#rrggbb or r,g,b) → its nearest blackbody
-  --color / --no-color   force or disable ANSI color (auto-detected by default)
-  --version
-```
-
-```bash
-starhue --from-color '#ffd1a3'   # what temperature is this color?
-```
-
-Color output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
-
-## Module map
-
-| module | role |
-|---|---|
-| `constants` | exact SI / CODATA physical constants |
-| `physics` | Planck's law, Wien's law, Stefan–Boltzmann, spectrum sampling |
-| `color` | CIE 1931 CMF → XYZ → sRGB; chromaticity; wavelength → display color |
-| `cct` | inverse direction: color → correlated color temperature |
-| `classify` | Harvard spectral class + perceptual color names |
-| `star` | the high-level `Star` object |
-| `render` | terminal card + spectrum sparkline |
-| `cli` | the command-line interface |
 
 ## References
 
