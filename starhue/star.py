@@ -1,5 +1,5 @@
-"""The :class:`Star` — a friendly object that ties the physics and color
-pipelines together for one temperature.
+"""The ``Star`` — a friendly object that ties the physics and color pipelines
+together for one temperature.
 """
 
 from __future__ import annotations
@@ -15,21 +15,30 @@ __all__ = ["Star"]
 class Star:
     """A blackbody at a given temperature, with its color and spectrum on tap.
 
-    Example
-    -------
-    >>> from starhue import Star
-    >>> sun = Star(5772)
-    >>> sun.hex
-    '#fff1ea'
-    >>> round(sun.peak_wavelength_nm)
-    502
-    >>> sun.spectral_type.letter
-    'G'
+    Example:
+        >>> from starhue import Star
+        >>> sun = Star(5772)
+        >>> sun.hex
+        '#fff1ea'
+        >>> round(sun.peak_wavelength_nm)
+        502
+        >>> sun.spectral_type.letter
+        'G'
     """
 
     __slots__ = ("temperature", "_color_step_nm")
 
     def __init__(self, temperature_k: float, *, color_step_nm: float = 1.0) -> None:
+        """Create a star at a given temperature.
+
+        Args:
+            temperature_k (float): Absolute temperature in kelvin (positive).
+            color_step_nm (float): Wavelength step for the color integration, in
+                nanometres (smaller is more accurate but slower).
+
+        Raises:
+            ValueError: If the temperature is not a positive, finite number.
+        """
         physics._check_temperature(temperature_k)
         self.temperature = float(temperature_k)
         self._color_step_nm = color_step_nm
@@ -37,8 +46,15 @@ class Star:
     # -- inverse constructor (color → temperature) --------------------------
     @classmethod
     def from_color(cls, color_value: Union[str, Tuple[float, float, float]]) -> "Star":
-        """Build the nearest blackbody to a color given as ``#rrggbb`` hex or an
-        sRGB ``(r, g, b)`` triple (0–255)."""
+        """Build the nearest blackbody to a color.
+
+        Args:
+            color_value (str | tuple[float, float, float]): A ``#rrggbb`` hex
+                string or an sRGB ``(r, g, b)`` triple (0–255).
+
+        Returns:
+            Star: The star whose temperature best matches the color.
+        """
         return cls(cct.color_to_temperature(color_value))
 
     # -- color --------------------------------------------------------------
@@ -69,7 +85,14 @@ class Star:
         return physics.stefan_boltzmann(self.temperature)
 
     def planck(self, wavelength_nm: float) -> float:
-        """Spectral radiance at a wavelength in nm (W·sr⁻¹·m⁻²·nm⁻¹)."""
+        """Spectral radiance at a wavelength in nm (W·sr⁻¹·m⁻²·nm⁻¹).
+
+        Args:
+            wavelength_nm (float): Wavelength in nanometres.
+
+        Returns:
+            float: Spectral radiance per nanometre.
+        """
         return physics.planck_nm(wavelength_nm, self.temperature)
 
     def spectrum(
@@ -80,7 +103,19 @@ class Star:
         *,
         normalize: bool = False,
     ) -> List[Tuple[float, float]]:
-        """Sample the Planck curve; see :func:`starhue.physics.spectrum`."""
+        """Sample the Planck curve across a wavelength band.
+
+        Args:
+            lo_nm (float): Lower bound of the band, in nanometres.
+            hi_nm (float): Upper bound of the band, in nanometres.
+            samples (int): Number of evenly spaced samples (must be >= 2).
+            normalize (bool): If True, scale the radiance so its peak within the
+                band is 1.0.
+
+        Returns:
+            list[tuple[float, float]]: ``(wavelength_nm, radiance)`` pairs; see
+                ``starhue.physics.spectrum``.
+        """
         return physics.spectrum(self.temperature, lo_nm, hi_nm, samples, normalize=normalize)
 
     # -- classification ------------------------------------------------------
@@ -94,7 +129,7 @@ class Star:
         """A friendly perceptual color name, e.g. ``"neutral white"``.
 
         The color as seen in a vacuum (the Sun reads white here, not the yellow
-        an atmosphere lends it); see :func:`starhue.classify.appearance_name`.
+        an atmosphere lends it); see ``starhue.classify.appearance_name``.
         """
         return appearance_name(self.temperature)
 

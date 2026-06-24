@@ -11,23 +11,32 @@ runs in reverse — color → correlated color temperature (CCT).
 
 ## Key structural fact
 
-**This repository directory *is* the `starhue` package** — the parent folder is
-named `starhue`, and the modules (`physics.py`, `color.py`, etc.) sit at the
-repo root, not in a subpackage. Imports between them are relative (`from . import
-color`), so the package is always run/imported by its parent-directory name:
+This is a **standard installable package**: the repo root holds packaging files
+(`pyproject.toml`, `requirements.txt`) and the source lives in the `starhue/`
+*subdirectory* (`physics.py`, `color.py`, etc., plus `assets/` for the sample
+star PNGs). Imports between modules are relative (`from . import color`), so run
+the package by its import name from anywhere:
 
 ```bash
-cd ..                      # to the directory that *contains* this repo
 python -m starhue 5772
 ```
 
-The `starhue/` *subdirectory* is a gitignored Python virtualenv (note the
-`/starhue` line in `.gitignore`) — **not** source code. Ignore it.
+Install it editable into a virtualenv for development (the `.venv/` directory is
+the project's virtualenv):
+
+```bash
+python -m pip install -e .   # builds via setuptools, generates starhue.egg-info/
+```
 
 There are **no third-party dependencies** — pure standard library (`math`,
-`argparse`, `os`, `sys`, `typing`). No `pyproject.toml`/`setup.py`, no
-test suite, no linter config. Verify changes by running the CLI and the
-doctests/examples in the README.
+`argparse`, `os`, `sys`, `typing`). `requirements.txt` is intentionally empty of
+packages; `pyproject.toml` declares `dependencies = []`. There is **no
+`[project.scripts]` entry point**, so the CLI is invoked as `python -m starhue`,
+not a bare `starhue` command. No test suite, no linter config. Verify changes by
+running the CLI and the doctests/examples in the README.
+
+`starhue.egg-info/` is generated build metadata from the editable install — not
+source; safe to delete (regenerated on the next install).
 
 This is a deliberately **basic** package: the surface is forward color
 (temperature → sRGB), inverse CCT (color → temperature), and the terminal star
@@ -37,7 +46,7 @@ removed to keep it simple — they may be re-added later.
 ## Common commands
 
 ```bash
-# Run the CLI (from the parent directory)
+# Run the CLI
 python -m starhue 5772                    # a card for the Sun
 python -m starhue 3000 5772 9940          # several cards at once
 python -m starhue --from-color '#ffd1a3'  # inverse: color → temperature

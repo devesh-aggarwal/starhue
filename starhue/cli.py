@@ -19,6 +19,11 @@ from .star import Star
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    """Construct the argparse parser for the CLI.
+
+    Returns:
+        argparse.ArgumentParser: The configured parser.
+    """
     p = argparse.ArgumentParser(
         prog="starhue",
         description="Temperature → true star color + Planck spectrum.",
@@ -42,13 +47,31 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _validate_temps(temps: Sequence[float]) -> None:
+    """Reject any non-positive temperature.
+
+    Args:
+        temps (Sequence[float]): Temperatures in kelvin to validate.
+
+    Raises:
+        SystemExit: If any temperature is not positive.
+    """
     for t in temps:
         if t <= 0:
             raise SystemExit(f"starhue: temperature must be positive, got {t:g}")
 
 
 def _parse_color(value: str) -> tuple:
-    """Parse a CLI color: ``#rrggbb``/``#rgb`` or ``r,g,b``."""
+    """Parse a CLI color: ``#rrggbb``/``#rgb`` or ``r,g,b``.
+
+    Args:
+        value (str): The color string from the command line.
+
+    Returns:
+        tuple: The ``(r, g, b)`` channels as 0–255 ints.
+
+    Raises:
+        SystemExit: If the color cannot be parsed.
+    """
     s = value.strip()
     if "," in s:
         parts = s.split(",")
@@ -65,6 +88,15 @@ def _parse_color(value: str) -> tuple:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    """Run the starhue command-line interface.
+
+    Args:
+        argv (list[str] | None): Argument vector; defaults to ``sys.argv`` when
+            None.
+
+    Returns:
+        int: Process exit code (0 on success).
+    """
     args = _build_parser().parse_args(argv)
     use_color = supports_color() if args.color is None else args.color
 
