@@ -6,7 +6,7 @@
 blackbody of that temperature would show to your eye. 
 
 <p align="center">
-  <img src="assets/sun.png" alt="starhue card for the Sun (5772 K)" width="640">
+  <img src="starhue/assets/sun.png" alt="starhue card for the Sun (5772 K)" width="640">
 </p>
 
 ---
@@ -200,13 +200,13 @@ table closely.
 A cool red giant — note the spectral peak sliding into the infrared:
 
 <p align="center">
-  <img src="assets/betelgeuse.png" alt="3500 K M-type star" width="560">
+  <img src="starhue/assets/betelgeuse.png" alt="3500 K M-type star" width="560">
 </p>
 
 A hot blue star, peak pushed into the ultraviolet:
 
 <p align="center">
-  <img src="assets/rigel.png" alt="12100 K B-type star" width="560">
+  <img src="starhue/assets/rigel.png" alt="12100 K B-type star" width="560">
 </p>
 
 ## CLI reference
