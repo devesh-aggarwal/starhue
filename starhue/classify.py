@@ -27,7 +27,14 @@ MK_CLASSES: List[Tuple[float, str, str]] = [
 
 
 def spectral_class(temperature_k: float) -> SpectralType:
-    """Return the Harvard spectral type for an effective temperature."""
+    """Return the Harvard spectral type for an effective temperature.
+
+    Args:
+        temperature_k (float): Effective temperature in kelvin.
+
+    Returns:
+        SpectralType: The matching spectral class and its description.
+    """
     for min_t, letter, desc in MK_CLASSES:
         if temperature_k >= min_t:
             return SpectralType(letter, desc)
@@ -59,6 +66,12 @@ def appearance_name(temperature_k: float) -> str:
     surface, before any atmosphere reddens it. So the Sun (5772 K) comes out a
     neutral white here, not the yellow it looks from the ground (Earth's
     atmosphere scatters away the blue and tints the disc yellow).
+
+    Args:
+        temperature_k (float): Absolute temperature in kelvin.
+
+    Returns:
+        str: A perceptual color name, e.g. ``"neutral white"``.
     """
     for max_t, name in _APPEARANCE:
         if temperature_k < max_t:

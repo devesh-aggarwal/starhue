@@ -27,6 +27,13 @@ def supports_color(stream: Optional[object] = None) -> bool:
     """Best-effort detection of 24-bit terminal color support.
 
     Honours the ``NO_COLOR`` and ``FORCE_COLOR`` conventions.
+
+    Args:
+        stream (object | None): The output stream to test; defaults to
+            ``sys.stdout`` when None.
+
+    Returns:
+        bool: True if the stream appears to support ANSI color.
     """
     if os.environ.get("NO_COLOR") is not None:
         return False
@@ -58,7 +65,16 @@ def _mix(a: Tuple[int, int, int], b: Tuple[int, int, int], t: float) -> Tuple[in
 
 
 def swatch(rgb: Tuple[int, int, int], width: int = 6, *, color: bool = True) -> str:
-    """A solid bar of ``width`` cells in ``rgb``."""
+    """A solid bar of ``width`` cells in ``rgb``.
+
+    Args:
+        rgb (tuple[int, int, int]): The fill color as 0–255 channels.
+        width (int): Number of cells wide.
+        color (bool): If False, render a monochrome bar of full blocks.
+
+    Returns:
+        str: The rendered swatch, with ANSI codes when ``color`` is True.
+    """
     if not color:
         return _FULL * width
     return _bg(rgb) + " " * width + _RESET
@@ -82,7 +98,18 @@ def spectrum_sparkline(
     *,
     color: bool = True,
 ) -> str:
-    """One-line Unicode sparkline of the Planck curve, tinted by wavelength."""
+    """One-line Unicode sparkline of the Planck curve, tinted by wavelength.
+
+    Args:
+        star (Star): The star whose spectrum to plot.
+        width (int): Number of columns (also the sample count).
+        lo_nm (float): Lower bound of the plotted band, in nanometres.
+        hi_nm (float): Upper bound of the plotted band, in nanometres.
+        color (bool): If False, omit ANSI color codes.
+
+    Returns:
+        str: The sparkline as a single line of text.
+    """
     pts = star.spectrum(lo_nm, hi_nm, samples=width, normalize=True)
     out = []
     for w_nm, level in pts:
@@ -127,8 +154,15 @@ def _frame(lines: Sequence[str], widths: Sequence[int]) -> str:
 def star_card(star: Star, *, color: bool = True, spectrum: bool = True, width: int = 46) -> str:
     """A multi-line "trading card" for a star: swatch, stats and spectrum.
 
-    Returns a string ready to ``print``. When ``color`` is false it degrades to
-    a clean monochrome layout (useful for logs and non-TTY output).
+    Args:
+        star (Star): The star to render.
+        color (bool): If False, degrade to a clean monochrome layout (useful for
+            logs and non-TTY output).
+        spectrum (bool): If False, omit the spectrum sparkline.
+        width (int): Card width in characters.
+
+    Returns:
+        str: A multi-line string ready to ``print``.
     """
     rgb = star.rgb
     st = star.spectral_type
