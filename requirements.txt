@@ -1,0 +1,5 @@
+# starhue has no third-party dependencies — it runs on the Python
+# standard library alone (math, argparse, os, sys, typing).
+#
+# This file is intentionally empty of packages. Install the project itself with:
+#   pip install -e .
