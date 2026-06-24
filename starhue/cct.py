@@ -69,8 +69,14 @@ def color_to_temperature(color: Union[str, Tuple[float, float, float]]) -> float
     """Correlated color temperature (K) of a color — the nearest blackbody on the
     Planckian locus.
 
-    Accepts a ``#rrggbb`` hex string or an sRGB ``(r, g, b)`` triple (0–255), and
-    round-trips with :func:`starhue.temperature_to_color`.
+    Round-trips with ``starhue.temperature_to_color``.
+
+    Args:
+        color (str | tuple[float, float, float]): A ``#rrggbb`` hex string or an
+            sRGB ``(r, g, b)`` triple (0–255).
+
+    Returns:
+        float: The correlated color temperature in kelvin.
     """
     rgb = _color.hex_to_rgb(color) if isinstance(color, str) else color
     return _cct_from_uv(*_color.xy_to_uv(*_color.rgb_to_xy(rgb)))

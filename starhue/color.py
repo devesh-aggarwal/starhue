@@ -74,6 +74,12 @@ def cie_1931_xyz(wavelength_nm: float) -> Tuple[float, float, float]:
     """CIE 1931 2° color-matching functions ``(x̄, ȳ, z̄)`` at one wavelength.
 
     Analytic multi-lobe Gaussian approximation (Wyman, Sloan & Shirley 2013).
+
+    Args:
+        wavelength_nm (float): Wavelength in nanometres.
+
+    Returns:
+        tuple[float, float, float]: The ``(x̄, ȳ, z̄)`` tristimulus weights.
     """
     w = wavelength_nm
     x = (
@@ -91,6 +97,17 @@ def spectrum_to_xyz(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, 
 
     The absolute scale is irrelevant for hue (we normalize later), so the
     integration constant is dropped.
+
+    Args:
+        temperature_k (float): Absolute temperature in kelvin.
+        step_nm (float): Wavelength step of the integration, in nanometres
+            (smaller is more accurate but slower).
+
+    Returns:
+        tuple[float, float, float]: The ``(X, Y, Z)`` tristimulus values.
+
+    Raises:
+        ValueError: If ``step_nm`` is not positive.
     """
     if step_nm <= 0:
         raise ValueError("step_nm must be positive")
@@ -107,7 +124,17 @@ def spectrum_to_xyz(temperature_k: float, step_nm: float = 1.0) -> Tuple[float, 
 
 
 def xyz_to_xy(x: float, y: float, z: float) -> Tuple[float, float]:
-    """CIE XYZ → chromaticity coordinates ``(x, y)``."""
+    """CIE XYZ → chromaticity coordinates ``(x, y)``.
+
+    Args:
+        x (float): CIE X tristimulus value.
+        y (float): CIE Y tristimulus value.
+        z (float): CIE Z tristimulus value.
+
+    Returns:
+        tuple[float, float]: Chromaticity ``(x, y)``; ``(0.0, 0.0)`` if the
+            tristimulus sum is non-positive.
+    """
     total = x + y + z
     if total <= 0:
         return 0.0, 0.0
@@ -127,6 +154,14 @@ def xyz_to_srgb(x: float, y: float, z: float) -> Tuple[float, float, float]:
     Out-of-gamut negatives are clamped to zero and the result is normalized to
     constant maximum luminance, so the returned color is the *hue* of the
     blackbody at full brightness (the conventional way to show star colors).
+
+    Args:
+        x (float): CIE X tristimulus value.
+        y (float): CIE Y tristimulus value.
+        z (float): CIE Z tristimulus value.
+
+    Returns:
+        tuple[float, float, float]: Gamma-encoded sRGB channels in ``[0, 1]``.
     """
     r, g, b = _matmul3(_XYZ_TO_RGB, x, y, z)
 
@@ -154,9 +189,18 @@ def _as_color(rgb: Tuple[int, int, int], fmt: str) -> Color:
 def temperature_to_color(temperature_k: float, fmt: str = "hex", step_nm: float = 1.0) -> Color:
     """The display sRGB color of a blackbody at ``temperature_k``.
 
-    Returns a ``#rrggbb`` string by default; pass ``fmt="rgb"`` for a
-    ``(r, g, b)`` triple of 0–255 ints. ``step_nm`` is the wavelength step of the
-    color integration (smaller is more accurate but slower).
+    Args:
+        temperature_k (float): Absolute temperature in kelvin.
+        fmt (str): Output format, ``"hex"`` (default) for a ``#rrggbb`` string
+            or ``"rgb"`` for a ``(r, g, b)`` triple of 0–255 ints.
+        step_nm (float): Wavelength step of the color integration, in nanometres
+            (smaller is more accurate but slower).
+
+    Returns:
+        str | tuple[int, int, int]: The color in the requested format.
+
+    Raises:
+        ValueError: If ``fmt`` is not ``"hex"`` or ``"rgb"``.
     """
     r, g, b = xyz_to_srgb(*spectrum_to_xyz(temperature_k, step_nm))
     return _as_color((_to_8bit(r), _to_8bit(g), _to_8bit(b)), fmt)
@@ -164,9 +208,6 @@ def temperature_to_color(temperature_k: float, fmt: str = "hex", step_nm: float 
 
 def wavelength_to_color(wavelength_nm: float, fmt: str = "hex") -> Color:
     """Display color of a single monochromatic wavelength.
-
-    Returns a ``#rrggbb`` string by default; pass ``fmt="rgb"`` for a
-    ``(r, g, b)`` triple of 0–255 ints.
 
     Used to paint spectrum plots. The hue follows the spectral ramp
     (violet→blue→cyan→green→yellow→red) across the ~400–700 nm visible window,
@@ -181,6 +222,17 @@ def wavelength_to_color(wavelength_nm: float, fmt: str = "hex") -> Color:
     The CIE color-matching functions are deliberately *not* used for the hue:
     their near-zero tails past ~700 nm cross over, and once renormalized to full
     brightness that flips deep red back to pure green (the ȳ tail outlives x̄).
+
+    Args:
+        wavelength_nm (float): Wavelength in nanometres.
+        fmt (str): Output format, ``"hex"`` (default) for a ``#rrggbb`` string
+            or ``"rgb"`` for a ``(r, g, b)`` triple of 0–255 ints.
+
+    Returns:
+        str | tuple[int, int, int]: The color in the requested format.
+
+    Raises:
+        ValueError: If ``fmt`` is not ``"hex"`` or ``"rgb"``.
     """
     wh = min(700.0, max(400.0, wavelength_nm))  # hue plateau: violet 400 → red 700
     if wh < 450:
@@ -228,7 +280,18 @@ def _gamma_decode(c: float) -> float:
 
 
 def hex_to_rgb(value: str) -> Tuple[int, int, int]:
-    """Parse a ``#rgb`` or ``#rrggbb`` string into a ``(r, g, b)`` 0–255 triple."""
+    """Parse a ``#rgb`` or ``#rrggbb`` string into a ``(r, g, b)`` 0–255 triple.
+
+    Args:
+        value (str): A hex color, with or without the leading ``#``; both the
+            3-digit short form and the 6-digit form are accepted.
+
+    Returns:
+        tuple[int, int, int]: The ``(r, g, b)`` channels as 0–255 ints.
+
+    Raises:
+        ValueError: If ``value`` is not a valid hex color.
+    """
     s = value.strip().lstrip("#")
     if len(s) == 3:
         s = "".join(ch * 2 for ch in s)
@@ -241,19 +304,44 @@ def hex_to_rgb(value: str) -> Tuple[int, int, int]:
 
 
 def srgb_to_xyz(r: float, g: float, b: float) -> Tuple[float, float, float]:
-    """Gamma-encoded sRGB (channels in ``[0, 1]``) → CIE XYZ."""
+    """Gamma-encoded sRGB (channels in ``[0, 1]``) → CIE XYZ.
+
+    Args:
+        r (float): Red channel in ``[0, 1]``.
+        g (float): Green channel in ``[0, 1]``.
+        b (float): Blue channel in ``[0, 1]``.
+
+    Returns:
+        tuple[float, float, float]: The ``(X, Y, Z)`` tristimulus values.
+    """
     rl, gl, bl = _gamma_decode(r), _gamma_decode(g), _gamma_decode(b)
     return _matmul3(_RGB_TO_XYZ, rl, gl, bl)
 
 
 def rgb_to_xy(rgb: Tuple[float, float, float]) -> Tuple[float, float]:
-    """An sRGB ``(r, g, b)`` triple (0–255) → CIE 1931 chromaticity ``(x, y)``."""
+    """An sRGB ``(r, g, b)`` triple (0–255) → CIE 1931 chromaticity ``(x, y)``.
+
+    Args:
+        rgb (tuple[float, float, float]): The ``(r, g, b)`` channels as 0–255
+            values.
+
+    Returns:
+        tuple[float, float]: CIE 1931 chromaticity ``(x, y)``.
+    """
     r, g, b = rgb
     return xyz_to_xy(*srgb_to_xyz(r / 255.0, g / 255.0, b / 255.0))
 
 
 def xy_to_uv(x: float, y: float) -> Tuple[float, float]:
-    """CIE 1931 ``(x, y)`` → CIE 1960 UCS ``(u, v)`` — the space CCT is defined in."""
+    """CIE 1931 ``(x, y)`` → CIE 1960 UCS ``(u, v)`` — the space CCT is defined in.
+
+    Args:
+        x (float): CIE 1931 chromaticity x.
+        y (float): CIE 1931 chromaticity y.
+
+    Returns:
+        tuple[float, float]: CIE 1960 UCS ``(u, v)``.
+    """
     denom = -2.0 * x + 12.0 * y + 3.0
     if denom == 0:
         return 0.0, 0.0
