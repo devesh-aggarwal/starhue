@@ -3,32 +3,20 @@
 The CCT of a color is *defined* as the temperature of the blackbody whose
 chromaticity is closest to it in the CIE 1960 UCS ``(u, v)`` plane. We find it by
 searching our own Planckian locus, so ``T → color → T`` round-trips cleanly.
-
-Alongside the temperature we report **Duv**: the signed distance from the locus.
-``Duv ≈ 0`` means the color really does look like a blackbody; a large
-``|Duv|`` means "nearest blackbody" is the best we can say (positive = the green
-side of the locus, negative = the pink/magenta side).
 """
 
 from __future__ import annotations
 
 import math
-from typing import NamedTuple, Tuple
+from typing import Tuple, Union
 
 from . import color as _color
 
-__all__ = ["CCTResult", "cct_from_rgb", "cct_from_hex"]
+__all__ = ["color_to_temperature"]
 
 #: Temperature range over which CCT is meaningful, in kelvin.
 T_MIN = 1000.0
 T_MAX = 40000.0
-
-
-class CCTResult(NamedTuple):
-    """Result of an inverse-CCT query."""
-
-    temperature_k: float  #: nearest blackbody temperature, K
-    duv: float            #: signed distance from the Planckian locus in CIE 1960 uv
 
 
 def _locus_uv(temperature_k: float) -> Tuple[float, float]:
@@ -58,8 +46,8 @@ def _golden_min(f, a: float, b: float, iters: int = 40) -> float:
     return (a + b) / 2.0
 
 
-def cct_from_uv(u: float, v: float) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for a CIE 1960 ``(u, v)`` color."""
+def _cct_from_uv(u: float, v: float) -> float:
+    """Nearest blackbody temperature (K) for a CIE 1960 ``(u, v)`` color."""
     # Work in mired (10⁶/T): the Planckian locus is nearly straight there, so a
     # coarse grid reliably brackets the minimum before we refine.
     m_lo, m_hi = 1e6 / T_MAX, 1e6 / T_MIN
@@ -74,40 +62,15 @@ def cct_from_uv(u: float, v: float) -> CCTResult:
     a = mireds[max(0, best_i - 1)]
     b = mireds[min(grid - 1, best_i + 1)]
     m_best = _golden_min(lambda m: _dist2_at_mired(m, u, v), a, b)
-    t_best = 1e6 / m_best
-
-    duv = _signed_duv(t_best, u, v)
-    return CCTResult(t_best, duv)
+    return 1e6 / m_best
 
 
-def _signed_duv(temperature_k: float, u: float, v: float) -> float:
-    """Signed offset from the locus: + on the green side, − on the pink side."""
-    dt = max(1.0, temperature_k * 1e-3)
-    u0, v0 = _locus_uv(temperature_k - dt)
-    u1, v1 = _locus_uv(temperature_k + dt)
-    lu, lv = _locus_uv(temperature_k)
+def color_to_temperature(color: Union[str, Tuple[float, float, float]]) -> float:
+    """Correlated color temperature (K) of a color — the nearest blackbody on the
+    Planckian locus.
 
-    # As temperature rises the locus runs down-and-left in (u, v); the normal
-    # (ty, −tx) therefore points up toward the green side, matching the ANSI/Ohno
-    # convention (Duv > 0 above the locus). Project (point − locus) onto it.
-    tx, ty = (u1 - u0), (v1 - v0)
-    norm = math.hypot(tx, ty)
-    if norm == 0:
-        return math.hypot(u - lu, v - lv)
-    nx, ny = ty / norm, -tx / norm
-    return (u - lu) * nx + (v - lv) * ny
-
-
-def cct_from_xy(x: float, y: float) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for a CIE 1931 ``(x, y)`` color."""
-    return cct_from_uv(*_color.xy_to_uv(x, y))
-
-
-def cct_from_rgb(rgb: Tuple[float, float, float]) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for an sRGB ``(r, g, b)`` 0–255 color."""
-    return cct_from_xy(*_color.rgb_to_xy(rgb))
-
-
-def cct_from_hex(value: str) -> CCTResult:
-    """Nearest blackbody temperature (and Duv) for a ``#rrggbb`` color."""
-    return cct_from_rgb(_color.hex_to_rgb(value))
+    Accepts a ``#rrggbb`` hex string or an sRGB ``(r, g, b)`` triple (0–255), and
+    round-trips with :func:`starhue.temperature_to_color`.
+    """
+    rgb = _color.hex_to_rgb(color) if isinstance(color, str) else color
+    return _cct_from_uv(*_color.xy_to_uv(*_color.rgb_to_xy(rgb)))

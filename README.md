@@ -45,9 +45,10 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 ```python
 import starhue
 
-# One-liners
-starhue.temperature_to_hex(5772)     # '#fff1ea'
-starhue.temperature_to_rgb(3500)     # (255, 200, 140)
+# One-liners — pick the output format you want
+starhue.temperature_to_color(5772)          # '#fff1ea'        (hex by default)
+starhue.temperature_to_color(3500, 'rgb')   # (255, 200, 140)  (r, g, b), 0–255
+starhue.wavelength_to_color(550, 'rgb')      # color of a single wavelength
 
 # The high-level object
 star = starhue.Star(5772)
@@ -67,12 +68,12 @@ star.spectrum(380, 750, samples=100, normalize=True)
 
 Go the other way too. The correlated color temperature is the nearest point on
 the Planckian locus in CIE 1960 *uv* space, so it round-trips with the forward
-model. You also get **Duv** — the signed distance from the locus (≈0 means the
-color really is blackbody-like; + is the green side, − the pink side).
+model. `color_to_temperature` takes the color as a `#rrggbb` string or an
+`(r, g, b)` triple and returns the temperature in kelvin.
 
 ```python
-starhue.cct_from_hex('#ffd1a3')   # CCTResult(temperature_k=3911.0, duv=-0.0012)
-starhue.cct_from_rgb((205, 217, 255)).temperature_k   # ~10000
+starhue.color_to_temperature('#ffd1a3')        # 3911.0
+starhue.color_to_temperature((205, 217, 255))  # ~10000
 
 starhue.Star.from_color('#fff1ea')        # Star(5773 K, #fff1ea, class G)
 starhue.Star.from_color((255, 200, 140))  # also takes an (r, g, b) triple
@@ -85,22 +86,27 @@ top-level `starhue` namespace, so `import starhue` is enough to reach all of
 them; the table notes which submodule each lives in if you'd rather import from
 there.
 
-### Forward — temperature → color
+### Forward — temperature / wavelength → color
+
+Each returns a `#rrggbb` string by default, or an `(r, g, b)` triple (0–255) with
+`format="rgb"`.
 
 | Name | Signature → returns | Description |
 |---|---|---|
-| `temperature_to_hex` | `(temperature_k, step_nm=1.0) → str` | Temperature → `#rrggbb` sRGB hex string. |
-| `temperature_to_rgb` | `(temperature_k, step_nm=1.0) → (int, int, int)` | Temperature → display sRGB `(r, g, b)`, 0–255. |
-| `wavelength_to_rgb` | `(wavelength_nm) → (int, int, int)` | Display color of a single monochromatic wavelength (for spectrum plots). |
+| `temperature_to_color` | `(temperature_k, format="hex", step_nm=1.0) → str \| (int, int, int)` | Color of a blackbody at this temperature (full colorimetric pipeline). |
+| `wavelength_to_color` | `(wavelength_nm, format="hex") → str \| (int, int, int)` | Display color of a single monochromatic wavelength (a spectral ramp, for plots). |
 
 ### Inverse — color → temperature
 
 | Name | Signature → returns | Description |
 |---|---|---|
-| `cct_from_hex` | `(value) → CCTResult` | Nearest blackbody (+ Duv) for a `#rrggbb` color. |
-| `cct_from_rgb` | `(rgb) → CCTResult` | Nearest blackbody (+ Duv) for an sRGB `(r, g, b)` 0–255 color. |
+| `color_to_temperature` | `(color) → float` | Correlated color temperature (K) of a `#rrggbb` hex string or `(r, g, b)` triple — the nearest blackbody on the Planckian locus. |
+
+### Color utilities
+
+| Name | Signature → returns | Description |
+|---|---|---|
 | `hex_to_rgb` | `(value) → (int, int, int)` | Parse `#rgb`/`#rrggbb` → `(r, g, b)`, 0–255. |
-| `CCTResult` | `NamedTuple(temperature_k, duv)` | What the `cct_from_*` functions return; `duv` is the signed distance from the locus. |
 
 ### Physics
 
@@ -231,7 +237,7 @@ Color output honours the `NO_COLOR` and `FORCE_COLOR` conventions.
 | `constants` | exact SI / CODATA physical constants |
 | `physics` | Planck's law, Wien's law, Stefan–Boltzmann, spectrum sampling |
 | `color` | CIE 1931 CMF → XYZ → sRGB; chromaticity; wavelength → display color |
-| `cct` | inverse direction: color → correlated color temperature + Duv |
+| `cct` | inverse direction: color → correlated color temperature |
 | `classify` | Harvard spectral class + perceptual color names |
 | `star` | the high-level `Star` object |
 | `render` | terminal card + spectrum sparkline |

@@ -69,7 +69,7 @@ def _column_color(w_nm: float) -> Tuple[int, int, int]:
     dim = (70, 70, 78)  # IR/UV: outside the eye's reach, drawn as cool gray
     if not _color.VISIBLE_LO_NM <= w_nm <= _color.VISIBLE_HI_NM:
         return dim
-    base = _color.wavelength_to_rgb(w_nm)
+    base = _color.wavelength_to_color(w_nm, "rgb")
     # Lift very dark spectral tails so the silhouette stays visible.
     return _mix(dim, base, max(0.35, max(base) / 255.0))
 
@@ -99,7 +99,7 @@ def _peak_marker_row(star: Star, width: int, lo_nm: float, hi_nm: float, *, colo
         idx = round((peak - lo_nm) / (hi_nm - lo_nm) * (width - 1))
         idx = max(0, min(width - 1, idx))
         if color:
-            row[idx] = f"{_fg(_color.wavelength_to_rgb(peak))}▲{_RESET}"
+            row[idx] = f"{_fg(_color.wavelength_to_color(peak, 'rgb'))}▲{_RESET}"
         else:
             row[idx] = "^"
     return "".join(row)

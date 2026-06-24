@@ -44,7 +44,7 @@ python -m starhue --from-color '#ffd1a3'  # inverse: color → temperature
 python -m starhue 5772 --no-spectrum      # card without the sparkline
 
 # Smoke-test the public API (no test framework is installed)
-python -c "import starhue; print(starhue.temperature_to_hex(5772))"  # -> #fff1ea
+python -c "import starhue; print(starhue.temperature_to_color(5772))"  # -> #fff1ea
 ```
 
 ## Architecture & data flow
@@ -69,10 +69,10 @@ constants  →  physics  →  color  →  cct       (cct inverts color/physics)
   sRGB (D65) → gamut-clamp → luminance-normalize → gamma-encode. The CMFs use
   the **Wyman–Sloan–Shirley (2013)** analytic Gaussian fit, so there is **no
   embedded CIE data table** — keep it that way.
-- **`cct.py`** — the inverse: color → nearest point on the Planckian locus in
-  CIE 1960 *uv*, returning a `CCTResult(temperature_k, duv)`. It round-trips
-  with the forward model, so changes to `color.py` chromaticity output must keep
-  `cct` consistent.
+- **`cct.py`** — the inverse: `color_to_temperature` finds the nearest point on
+  the Planckian locus in CIE 1960 *uv* and returns that temperature (K). It
+  round-trips with the forward model, so changes to `color.py` chromaticity
+  output must keep `cct` consistent.
 - **`classify.py`** — Harvard spectral class (O/B/A/F/G/K/M) and perceptual
   color names from temperature.
 - **`star.py`** — `Star`, the high-level facade. It owns no physics; every

@@ -16,18 +16,20 @@ to within ~1% with no embedded data table.
 from __future__ import annotations
 
 import math
-from typing import Tuple
+from typing import Tuple, Union
 
 from .physics import planck_nm
 
 __all__ = [
-    "temperature_to_rgb",
-    "temperature_to_hex",
-    "wavelength_to_rgb",
+    "temperature_to_color",
+    "wavelength_to_color",
     "hex_to_rgb",
     "VISIBLE_LO_NM",
     "VISIBLE_HI_NM",
 ]
+
+#: The two output formats every ``*_to_color`` function understands.
+Color = Union[str, Tuple[int, int, int]]
 
 #: Lower / upper bounds of the integration band, nm. The Gaussian lobes have
 #: negligible weight outside this, matching the usual 360–830 nm CIE table.
@@ -139,20 +141,32 @@ def xyz_to_srgb(x: float, y: float, z: float) -> Tuple[float, float, float]:
     return _gamma_encode(r), _gamma_encode(g), _gamma_encode(b)
 
 
-def temperature_to_rgb(temperature_k: float, step_nm: float = 1.0) -> Tuple[int, int, int]:
-    """Temperature → display sRGB as a ``(r, g, b)`` triple of 0–255 ints."""
+def _as_color(rgb: Tuple[int, int, int], fmt: str) -> Color:
+    """Render an ``(r, g, b)`` triple as the requested ``fmt`` (``"rgb"``/``"hex"``)."""
+    if fmt == "rgb":
+        return rgb
+    if fmt == "hex":
+        r, g, b = rgb
+        return f"#{r:02x}{g:02x}{b:02x}"
+    raise ValueError(f"format must be 'rgb' or 'hex', got {fmt!r}")
+
+
+def temperature_to_color(temperature_k: float, fmt: str = "hex", step_nm: float = 1.0) -> Color:
+    """The display sRGB color of a blackbody at ``temperature_k``.
+
+    Returns a ``#rrggbb`` string by default; pass ``fmt="rgb"`` for a
+    ``(r, g, b)`` triple of 0–255 ints. ``step_nm`` is the wavelength step of the
+    color integration (smaller is more accurate but slower).
+    """
     r, g, b = xyz_to_srgb(*spectrum_to_xyz(temperature_k, step_nm))
-    return _to_8bit(r), _to_8bit(g), _to_8bit(b)
+    return _as_color((_to_8bit(r), _to_8bit(g), _to_8bit(b)), fmt)
 
 
-def temperature_to_hex(temperature_k: float, step_nm: float = 1.0) -> str:
-    """Temperature → ``#rrggbb`` sRGB hex string."""
-    r, g, b = temperature_to_rgb(temperature_k, step_nm)
-    return f"#{r:02x}{g:02x}{b:02x}"
+def wavelength_to_color(wavelength_nm: float, fmt: str = "hex") -> Color:
+    """Display color of a single monochromatic wavelength.
 
-
-def wavelength_to_rgb(wavelength_nm: float) -> Tuple[int, int, int]:
-    """Display color of a single monochromatic wavelength (0–255).
+    Returns a ``#rrggbb`` string by default; pass ``fmt="rgb"`` for a
+    ``(r, g, b)`` triple of 0–255 ints.
 
     Used to paint spectrum plots. The hue follows the spectral ramp
     (violet→blue→cyan→green→yellow→red) across the ~400–700 nm visible window,
@@ -193,7 +207,8 @@ def wavelength_to_rgb(wavelength_nm: float) -> Tuple[int, int, int]:
         f = 1.0
 
     gamma = 0.8  # mild lift for a richer, poster-like rainbow
-    return _to_8bit((r * f) ** gamma), _to_8bit((g * f) ** gamma), _to_8bit((b * f) ** gamma)
+    rgb = (_to_8bit((r * f) ** gamma), _to_8bit((g * f) ** gamma), _to_8bit((b * f) ** gamma))
+    return _as_color(rgb, fmt)
 
 
 def _to_8bit(c: float) -> int:

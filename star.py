@@ -39,20 +39,18 @@ class Star:
     def from_color(cls, color_value: Union[str, Tuple[float, float, float]]) -> "Star":
         """Build the nearest blackbody to a color given as ``#rrggbb`` hex or an
         sRGB ``(r, g, b)`` triple (0–255)."""
-        if isinstance(color_value, str):
-            return cls(cct.cct_from_hex(color_value).temperature_k)
-        return cls(cct.cct_from_rgb(color_value).temperature_k)
+        return cls(cct.color_to_temperature(color_value))
 
     # -- color --------------------------------------------------------------
     @property
     def rgb(self) -> Tuple[int, int, int]:
         """Display sRGB color as a ``(r, g, b)`` triple of 0–255 ints."""
-        return color.temperature_to_rgb(self.temperature, self._color_step_nm)
+        return color.temperature_to_color(self.temperature, "rgb", self._color_step_nm)
 
     @property
     def hex(self) -> str:
         """Display sRGB color as a ``#rrggbb`` string."""
-        return color.temperature_to_hex(self.temperature, self._color_step_nm)
+        return color.temperature_to_color(self.temperature, "hex", self._color_step_nm)
 
     # -- physics -------------------------------------------------------------
     @property

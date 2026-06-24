@@ -12,7 +12,7 @@ import sys
 from typing import List, Optional, Sequence
 
 from . import __version__
-from .cct import cct_from_rgb
+from .cct import color_to_temperature
 from .color import hex_to_rgb
 from .render import star_card, supports_color
 from .star import Star
@@ -71,13 +71,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     # --- inverse mode: a color → its nearest blackbody --------------------
     if args.from_color:
         rgb = _parse_color(args.from_color)
-        result = cct_from_rgb(rgb)
+        temperature = color_to_temperature(rgb)
         print(
-            f"# {args.from_color.strip()} → nearest blackbody {result.temperature_k:.0f} K"
-            f" (Duv {result.duv:+.4f})",
+            f"# {args.from_color.strip()} → nearest blackbody {temperature:.0f} K",
             file=sys.stderr,
         )
-        temps: List[float] = [result.temperature_k]
+        temps: List[float] = [temperature]
     else:
         temps = args.temperatures or [5772.0]  # default: show the Sun
         _validate_temps(temps)
