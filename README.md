@@ -10,6 +10,8 @@ class. It also runs in reverse, turning a color back into a correlated color tem
 ![PyPI - Version](https://img.shields.io/pypi/v/starhue)
 [![A rectangular badge, half black half purple containing the text made at Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)](https://semaphorep.github.io/codeastro/)
 
+📖 Full documentation: [starhue.readthedocs.io](https://starhue.readthedocs.io/)
+
 ## Installation
 
 `starhue` is pure standard library — no third-party dependencies, just Python 3.8+.
