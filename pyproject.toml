@@ -4,9 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "starhue"
-version = "1.0.0"
+# Version is the single source of truth in starhue/__init__.py (__version__);
+# see [tool.setuptools.dynamic] below.
+dynamic = ["version"]
 requires-python = ">=3.8"
 
 # starhue is a pure standard library (math, argparse, os, sys, typing).
 # It has no third-party dependencies.
 dependencies = []
+
+# Development-only extras. The runtime stays zero-dependency; pytest is needed
+# only to run the test suite:  pip install -e '.[test]'
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.setuptools.dynamic]
+version = {attr = "starhue.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
