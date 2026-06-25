@@ -34,5 +34,7 @@ jobs:
           python -m pip install -e '.[test]'
 
       - name: Run the test suite
-        # Bare pytest: it picks up testpaths = ["tests"] from pyproject.toml.
-        run: pytest -v
+        # Invoke pytest through the interpreter (not the bare `pytest` console
+        # script, which may not be on PATH on the runner). It picks up
+        # testpaths = ["tests"] from pyproject.toml.
+        run: python -m pytest -v

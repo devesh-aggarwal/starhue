@@ -13,5 +13,13 @@ requires-python = ">=3.8"
 # It has no third-party runtime dependencies.
 dependencies = []
 
+# Development-only extras. The runtime stays zero-dependency; pytest is needed
+# only to run the test suite:  pip install -e '.[test]'
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
 [tool.setuptools.dynamic]
 version = {attr = "starhue.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
