@@ -6,10 +6,6 @@ the Planck spectrum, the Wien peak, Stefan–Boltzmann exitance, and the Harvard
 class. It also runs in reverse, turning a color back into a correlated color temperature
 (CCT), and renders it all as a star card in your terminal.
 
-<p align="center">
-  <img src="starhue/assets/sun.png" alt="starhue card for the Sun (5772 K)" width="640">
-</p>
-
 ---
 
 ## Installation
@@ -253,20 +249,6 @@ Yes — it lands on the textbook reference points:
 The full Planckian locus matches Mitchell Charity's well-known blackbody-color
 table closely.
 
-## Gallery
-
-A cool red giant — note the spectral peak sliding into the infrared:
-
-<p align="center">
-  <img src="starhue/assets/betelgeuse.png" alt="3500 K M-type star" width="560">
-</p>
-
-A hot blue star, peak pushed into the ultraviolet:
-
-<p align="center">
-  <img src="starhue/assets/rigel.png" alt="12100 K B-type star" width="560">
-</p>
-
 ## References
 
 - M. Planck, *On the Law of Distribution of Energy in the Normal Spectrum* (1901).
@@ -278,4 +260,4 @@ A hot blue star, peak pushed into the ultraviolet:
 
 ## License
 
-_To be decided by the project owner._
+BSD-3-Clause license
