@@ -34,7 +34,7 @@ from .physics import (
 )
 from .star import Star
 
-__version__ = "1.0.3"
+__version__ = "1.1.0"
 
 __all__ = [
     "__version__",

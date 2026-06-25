@@ -6,6 +6,7 @@ the Planck spectrum, the Wien peak, Stefan–Boltzmann exitance, and the Harvard
 class. It also runs in reverse, turning a color back into a correlated color temperature
 (CCT), and renders it all as a star card in your terminal.
 
+[![tests](https://github.com/devesh-aggarwal/starhue/actions/workflows/python-app.yml/badge.svg)](https://github.com/devesh-aggarwal/starhue/actions/workflows/python-app.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20854709.svg)](https://doi.org/10.5281/zenodo.20854709)
 ![PyPI - Version](https://img.shields.io/pypi/v/starhue)
 [![A rectangular badge, half black half purple containing the text made at Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)](https://semaphorep.github.io/codeastro/)
@@ -14,14 +15,17 @@ class. It also runs in reverse, turning a color back into a correlated color tem
 
 ## Installation
 
-`starhue` is pure standard library — no third-party dependencies, just Python 3.8+.
+The core is pure standard library — no third-party dependencies, just Python 3.8+.
+Plotting a star's spectrum (`Star.spectrum`) is the one optional feature that
+needs matplotlib; install it with the `plot` extra when you want it.
 Clone the repo and install it editable into a virtualenv:
 
 ```bash
 git clone https://github.com/devesh-aggarwal/starhue.git
 cd starhue
 python -m venv .venv && source .venv/bin/activate
-python -m pip install -e .
+python -m pip install -e .          # core, zero third-party dependencies
+python -m pip install -e '.[plot]'  # + matplotlib, for Star.spectrum() plots
 ```
 
 There is nothing else to fetch. Confirm it works:
@@ -87,9 +91,14 @@ star.radiant_exitance     # 6.29e7 W/m²  — Stefan–Boltzmann
 star.spectral_type.letter # 'G'
 star.appearance           # 'neutral white'
 
-# The raw spectrum: list of (wavelength_nm, radiance)
-star.spectrum(380, 750, samples=100, normalize=True)
+# Plot the Planck curve, stroked in the star's own integrated colour
+# (needs the optional plotting extra: pip install starhue[plot])
+fig = star.spectrum(380, 750, samples=100)
+fig.savefig("sun.png")    # or fig.show()
 ```
+
+For the raw `(wavelength_nm, radiance)` data behind the plot, call the
+`starhue.spectrum(...)` physics function (see the API table below).
 
 ### Inverse: color → temperature (CCT)
 
@@ -179,7 +188,7 @@ more accurate but slower.
 | `spectral_type` | property | `SpectralType` | Harvard spectral classification. |
 | `appearance` | property | `str` | Friendly perceptual color name, e.g. `"neutral white"`. |
 | `planck(wavelength_nm)` | method | `float` | Spectral radiance at a wavelength in nm. |
-| `spectrum(lo_nm=300, hi_nm=1100, samples=200, *, normalize=False)` | method | `list[(float, float)]` | Sample the Planck curve → `(wavelength_nm, radiance)` pairs. |
+| `spectrum(lo_nm=300, hi_nm=1100, samples=200)` | method | `matplotlib.figure.Figure` | Plot the Planck curve, stroked in the star's own colour. Needs the optional `plot` extra (`pip install starhue[plot]`). For raw data use the `spectrum` physics function. |
 
 Anything not listed here (the colorimetry conversion steps in `starhue.color`,
 the physical constants in `starhue.constants`) is internal plumbing the functions
