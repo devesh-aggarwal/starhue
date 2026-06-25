@@ -4,7 +4,7 @@ together for one temperature.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 from . import cct, color, physics
 from .classify import SpectralType, appearance_name, spectral_class
@@ -100,8 +100,8 @@ class Star:
 
     def spectrum(
         self,
-        lo_nm: float = 300.0,
-        hi_nm: float = 1100.0,
+        lo_nm: Optional[float] = None,
+        hi_nm: Optional[float] = None,
         samples: int = 200,
     ) -> "Figure":
         """Plot the Planck curve across a wavelength band, tinted the star's color.
@@ -111,9 +111,17 @@ class Star:
         stroked in the star's own integrated sRGB color, on a dark background so
         even near-white stars stay legible.
 
+        By default the band auto-fits around the star's Wien peak — ``0.4×`` to
+        ``3×`` the peak wavelength — so the curve always rises from near zero,
+        crests at its visible maximum, and decays down the tail, whatever the
+        temperature. (A fixed band would push the peak off-screen for hot stars,
+        whose peak lies in the UV.) Pass ``lo_nm``/``hi_nm`` to override.
+
         Args:
-            lo_nm (float): Lower bound of the band, in nanometres.
-            hi_nm (float): Upper bound of the band, in nanometres.
+            lo_nm (float | None): Lower bound of the band, in nanometres. If
+                None, ``0.4 ×`` the Wien peak wavelength.
+            hi_nm (float | None): Upper bound of the band, in nanometres. If
+                None, ``3 ×`` the Wien peak wavelength.
             samples (int): Number of evenly spaced samples (must be >= 2).
 
         Returns:
@@ -132,6 +140,12 @@ class Star:
                 "Star.spectrum() needs matplotlib; install the plotting extra "
                 "with `pip install starhue[plot]` (or `pip install matplotlib`)."
             ) from exc
+
+        peak_nm = self.peak_wavelength_nm
+        if lo_nm is None:
+            lo_nm = 0.4 * peak_nm
+        if hi_nm is None:
+            hi_nm = 3.0 * peak_nm
 
         pts = physics.spectrum(self.temperature, lo_nm, hi_nm, samples)
         wavelengths = [w for w, _ in pts]

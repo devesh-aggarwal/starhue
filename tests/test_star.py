@@ -81,6 +81,23 @@ def test_spectrum_returns_figure_tinted_to_star_color():
         plt.close(fig)
 
 
+def test_spectrum_default_band_auto_fits_around_wien_peak():
+    plt = pytest.importorskip("matplotlib.pyplot")
+
+    # A hot star's Wien peak (~290 nm at 10000 K) sits below the old fixed 300 nm
+    # floor; the auto-fitted band must still bracket it so the peak is in view.
+    s = Star(10000.0)
+    peak = s.peak_wavelength_nm
+    fig = s.spectrum()
+    try:
+        lo, hi = fig.axes[0].get_xlim()
+        assert lo == pytest.approx(0.4 * peak)
+        assert hi == pytest.approx(3.0 * peak)
+        assert lo < peak < hi
+    finally:
+        plt.close(fig)
+
+
 # --------------------------------------------------------------------------
 # classification properties delegate
 # --------------------------------------------------------------------------
