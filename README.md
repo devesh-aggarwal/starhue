@@ -7,7 +7,10 @@ class. It also runs in reverse, turning a color back into a correlated color tem
 (CCT), and renders it all as a star card in your terminal.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20854709.svg)](https://doi.org/10.5281/zenodo.20854709)
+![PyPI - Version](https://img.shields.io/pypi/v/starhue)
 [![A rectangular badge, half black half purple containing the text made at Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)](https://semaphorep.github.io/codeastro/)
+
+
 ---
 
 ## Installation
