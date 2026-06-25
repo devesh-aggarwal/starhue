@@ -6,14 +6,9 @@ the Planck spectrum, the Wien peak, Stefan–Boltzmann exitance, and the Harvard
 class. It also runs in reverse, turning a color back into a correlated color temperature
 (CCT), and renders it all as a star card in your terminal.
 
-[![DOI](https://zenodo.org/badge/1277433569.svg)](https://doi.org/10.5281/zenodo.20854709)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20854709.svg)](https://doi.org/10.5281/zenodo.20854709)
+![PyPI - Version](https://img.shields.io/pypi/v/starhue)
 [![A rectangular badge, half black half purple containing the text made at Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)](https://semaphorep.github.io/codeastro/)
-
-<p align="center">
-  <img src="starhue/assets/sun.png" alt="starhue card for the Sun (5772 K)" width="640">
-</p>
-
----
 
 ## Installation
 
@@ -50,7 +45,7 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 ╭────────────────────────────────────────────────╮
 │ ★  5772 K                              class G  │
 │ ████████  #fff1ea  rgb(255, 241, 234)          │
-│ yellow, Sun-like · neutral white               │
+│ Sun-like · neutral white                       │
 │                                                │
 │ peak λ    502.0 nm  ·  3.393e+14 Hz            │
 │ exitance  62.94 MW/m²                          │
@@ -61,8 +56,11 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 ╰────────────────────────────────────────────────╯
 ```
 
-Reading the card: the swatch with its `#rrggbb` / `rgb()` values is the star's display
-color; **peak λ** is the Wien peak wavelength (nm) and its frequency (Hz); **exitance** is
+Reading the card: the swatch with its `#rrggbb` / `rgb()` values is the star's *intrinsic*
+color — the light leaving its surface seen from space, before any atmosphere reddens it, so
+the Sun reads neutral white rather than the yellow it looks from the ground. The line under
+the swatch pairs the spectral class's character (`Sun-like`) with that color's perceptual
+name (`neutral white`). **peak λ** is the Wien peak wavelength (nm) and its frequency (Hz); **exitance** is
 the Stefan–Boltzmann radiant exitance (here in MW/m²); the sparkline is the Planck spectrum
 sampled 300–1100 nm, with ▲ marking the peak. *(In a real terminal the swatch and sparkline
 are full 24-bit color.)*
@@ -256,20 +254,6 @@ Yes — it lands on the textbook reference points:
 The full Planckian locus matches Mitchell Charity's well-known blackbody-color
 table closely.
 
-## Gallery
-
-A cool red giant — note the spectral peak sliding into the infrared:
-
-<p align="center">
-  <img src="starhue/assets/betelgeuse.png" alt="3500 K M-type star" width="560">
-</p>
-
-A hot blue star, peak pushed into the ultraviolet:
-
-<p align="center">
-  <img src="starhue/assets/rigel.png" alt="12100 K B-type star" width="560">
-</p>
-
 ## References
 
 - M. Planck, *On the Law of Distribution of Energy in the Normal Spectrum* (1901).
@@ -281,4 +265,4 @@ A hot blue star, peak pushed into the ultraviolet:
 
 ## License
 
-_To be decided by the project owner._
+BSD-3-Clause license
