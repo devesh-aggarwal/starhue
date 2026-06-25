@@ -14,15 +14,18 @@ class SpectralType(NamedTuple):
     description: str      #: short prose description
 
 
-# (min_temp_K, letter, description). Upper-open on the hot end.
+# (min_temp_K, letter, description). Upper-open on the hot end. The
+# descriptions deliberately carry no color word — the card's single color
+# comes from ``appearance_name`` (the computed intrinsic hue), so a textbook
+# label like "yellow" for class G would only contradict it.
 MK_CLASSES: List[Tuple[float, str, str]] = [
-    (30000.0, "O", "blue, blistering and short-lived"),
-    (10000.0, "B", "blue-white, massive and luminous"),
-    (7500.0, "A", "white with strong hydrogen lines"),
-    (6000.0, "F", "yellow-white"),
-    (5200.0, "G", "yellow, Sun-like"),
-    (3700.0, "K", "orange, cooler than the Sun"),
-    (0.0, "M", "red, cool and abundant"),
+    (30000.0, "O", "blistering and short-lived"),
+    (10000.0, "B", "massive and luminous"),
+    (7500.0, "A", "strong hydrogen lines"),
+    (6000.0, "F", "hotter than the Sun"),
+    (5200.0, "G", "Sun-like"),
+    (3700.0, "K", "cooler than the Sun"),
+    (0.0, "M", "cool and abundant"),
 ]
 
 
@@ -44,11 +47,14 @@ def spectral_class(temperature_k: float) -> SpectralType:
     return SpectralType(letter, desc)
 
 
-# (max_temp_K exclusive, name). The colors people actually perceive.
+# (max_temp_K exclusive, name). Each name tracks the hue the integrated
+# Planck spectrum actually renders to in sRGB (see color.temperature_to_color),
+# so the boundaries follow the computed red→orange→white→blue progression.
 _APPEARANCE: List[Tuple[float, str]] = [
-    (1200.0, "dim ember red"),
-    (2200.0, "deep red"),
-    (3200.0, "reddish orange"),
+    (1300.0, "ember red"),
+    (1900.0, "orange-red"),
+    (2600.0, "deep orange"),
+    (3400.0, "amber orange"),
     (4200.0, "warm amber"),
     (5000.0, "pale gold"),
     (5600.0, "soft yellow-white"),

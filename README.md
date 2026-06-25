@@ -43,7 +43,7 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 ╭────────────────────────────────────────────────╮
 │ ★  5772 K                              class G  │
 │ ████████  #fff1ea  rgb(255, 241, 234)          │
-│ yellow, Sun-like · neutral white               │
+│ Sun-like · neutral white                       │
 │                                                │
 │ peak λ    502.0 nm  ·  3.393e+14 Hz            │
 │ exitance  62.94 MW/m²                          │
@@ -54,8 +54,11 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 ╰────────────────────────────────────────────────╯
 ```
 
-Reading the card: the swatch with its `#rrggbb` / `rgb()` values is the star's display
-color; **peak λ** is the Wien peak wavelength (nm) and its frequency (Hz); **exitance** is
+Reading the card: the swatch with its `#rrggbb` / `rgb()` values is the star's *intrinsic*
+color — the light leaving its surface seen from space, before any atmosphere reddens it, so
+the Sun reads neutral white rather than the yellow it looks from the ground. The line under
+the swatch pairs the spectral class's character (`Sun-like`) with that color's perceptual
+name (`neutral white`). **peak λ** is the Wien peak wavelength (nm) and its frequency (Hz); **exitance** is
 the Stefan–Boltzmann radiant exitance (here in MW/m²); the sparkline is the Planck spectrum
 sampled 300–1100 nm, with ▲ marking the peak. *(In a real terminal the swatch and sparkline
 are full 24-bit color.)*
