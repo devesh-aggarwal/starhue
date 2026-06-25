@@ -4,9 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "starhue"
-version = "1.0.2"
+# Version is the single source of truth in starhue/__init__.py (__version__);
+# see [tool.setuptools.dynamic] below.
+dynamic = ["version"]
 requires-python = ">=3.8"
 
 # starhue is pure standard library (math, argparse, os, sys, typing).
 # It has no third-party runtime dependencies.
 dependencies = []
+
+[tool.setuptools.dynamic]
+version = {attr = "starhue.__version__"}
