@@ -45,7 +45,7 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 
 ```text
 ╭────────────────────────────────────────────────╮
-│ ★  5772 K                              class G  │
+│ ★  5772 K                              class G │
 │ ████████  #fff1ea  rgb(255, 241, 234)          │
 │ Sun-like · neutral white                       │
 │                                                │
@@ -53,7 +53,7 @@ python -m starhue 5772 --no-spectrum       # card without the sparkline
 │ exitance  62.94 MW/m²                          │
 │                                                │
 │ ▄▄▅▆▆▇▇▇██████████▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▃ │
-│            ▲                                    │
+│            ▲                                   │
 │ 300nm                                   1100nm │
 ╰────────────────────────────────────────────────╯
 ```
