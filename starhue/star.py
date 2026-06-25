@@ -4,10 +4,13 @@ together for one temperature.
 
 from __future__ import annotations
 
-from typing import List, Tuple, Union
+from typing import TYPE_CHECKING, Tuple, Union
 
 from . import cct, color, physics
 from .classify import SpectralType, appearance_name, spectral_class
+
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
 
 __all__ = ["Star"]
 
@@ -100,23 +103,58 @@ class Star:
         lo_nm: float = 300.0,
         hi_nm: float = 1100.0,
         samples: int = 200,
-        *,
-        normalize: bool = False,
-    ) -> List[Tuple[float, float]]:
-        """Sample the Planck curve across a wavelength band.
+    ) -> "Figure":
+        """Plot the Planck curve across a wavelength band, tinted the star's color.
+
+        Samples spectral radiance against wavelength (from the package physics,
+        not loose constants) and draws it as a matplotlib figure. The curve is
+        stroked in the star's own integrated sRGB color, on a dark background so
+        even near-white stars stay legible.
 
         Args:
             lo_nm (float): Lower bound of the band, in nanometres.
             hi_nm (float): Upper bound of the band, in nanometres.
             samples (int): Number of evenly spaced samples (must be >= 2).
-            normalize (bool): If True, scale the radiance so its peak within the
-                band is 1.0.
 
         Returns:
-            list[tuple[float, float]]: ``(wavelength_nm, radiance)`` pairs; see
-                ``starhue.physics.spectrum``.
+            matplotlib.figure.Figure: The figure, ready to ``.show()`` or
+                ``.savefig(...)``. The caller owns it (and is responsible for
+                closing it, e.g. ``matplotlib.pyplot.close(fig)``).
+
+        Raises:
+            ModuleNotFoundError: If matplotlib is not installed. Plotting is an
+                optional extra — install it with ``pip install starhue[plot]``.
         """
-        return physics.spectrum(self.temperature, lo_nm, hi_nm, samples, normalize=normalize)
+        try:
+            import matplotlib.pyplot as plt
+        except ModuleNotFoundError as exc:  # pragma: no cover - import guard
+            raise ModuleNotFoundError(
+                "Star.spectrum() needs matplotlib; install the plotting extra "
+                "with `pip install starhue[plot]` (or `pip install matplotlib`)."
+            ) from exc
+
+        pts = physics.spectrum(self.temperature, lo_nm, hi_nm, samples)
+        wavelengths = [w for w, _ in pts]
+        radiance = [r for _, r in pts]
+        line_color = tuple(channel / 255 for channel in self.rgb)
+
+        bg = "#11131a"
+        fig, ax = plt.subplots(figsize=(8, 6), facecolor=bg)
+        ax.set_facecolor(bg)
+        ax.plot(wavelengths, radiance, color=line_color, linewidth=2)
+        ax.set_xlabel("Wavelength (nm)", color="0.85")
+        ax.set_ylabel("Spectral radiance (W·sr⁻¹·m⁻²·nm⁻¹)", color="0.85")
+        ax.set_title(
+            f"Blackbody spectrum — {self.temperature:g} K (class {self.spectral_type.letter})",
+            color="0.95",
+        )
+        ax.set_xlim(lo_nm, hi_nm)
+        ax.set_ylim(bottom=0)
+        ax.tick_params(colors="0.7")
+        for spine in ax.spines.values():
+            spine.set_color("0.4")
+        fig.tight_layout()
+        return fig
 
     # -- classification ------------------------------------------------------
     @property

@@ -9,6 +9,7 @@ import sys
 from typing import List, Optional, Sequence, Tuple
 
 from . import color as _color
+from . import physics as _physics
 from .star import Star
 
 __all__ = [
@@ -110,7 +111,7 @@ def spectrum_sparkline(
     Returns:
         str: The sparkline as a single line of text.
     """
-    pts = star.spectrum(lo_nm, hi_nm, samples=width, normalize=True)
+    pts = _physics.spectrum(star.temperature, lo_nm, hi_nm, samples=width, normalize=True)
     out = []
     for w_nm, level in pts:
         ch = _BLOCKS[max(0, min(8, round(level * 8)))]

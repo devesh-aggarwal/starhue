@@ -9,14 +9,16 @@ name = "starhue"
 dynamic = ["version"]
 requires-python = ">=3.8"
 
-# starhue is a pure standard library (math, argparse, os, sys, typing).
-# It has no third-party dependencies.
+# starhue's core is pure standard library (math, argparse, os, sys, typing).
+# It has no third-party runtime dependencies.
 dependencies = []
 
-# Development-only extras. The runtime stays zero-dependency; pytest is needed
-# only to run the test suite:  pip install -e '.[test]'
+# Optional extras. The core stays zero-dependency; matplotlib is needed only for
+# Star.spectrum() plots (pip install -e '.[plot]'), and pytest only to run the
+# test suite (pip install -e '.[test]').
 [project.optional-dependencies]
-test = ["pytest>=7.0"]
+plot = ["matplotlib>=3.5"]
+test = ["pytest>=7.0", "matplotlib>=3.5"]
 
 [tool.setuptools.dynamic]
 version = {attr = "starhue.__version__"}

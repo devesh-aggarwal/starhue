@@ -63,9 +63,22 @@ def test_planck_method_delegates():
     assert Star(SUN).planck(500.0) == physics.planck_nm(500.0, SUN)
 
 
-def test_spectrum_method_delegates():
+def test_spectrum_returns_figure_tinted_to_star_color():
+    plt = pytest.importorskip("matplotlib.pyplot")
+    from matplotlib.figure import Figure
+
     s = Star(SUN)
-    assert s.spectrum(400.0, 700.0, 50) == physics.spectrum(SUN, 400.0, 700.0, 50)
+    fig = s.spectrum(400.0, 700.0, 50)
+    try:
+        assert isinstance(fig, Figure)
+        line = fig.axes[0].lines[0]
+        # the curve is the Planck data straight from physics.spectrum...
+        assert list(line.get_xdata()) == [w for w, _ in physics.spectrum(SUN, 400.0, 700.0, 50)]
+        assert list(line.get_ydata()) == [r for _, r in physics.spectrum(SUN, 400.0, 700.0, 50)]
+        # ...stroked in the star's own integrated sRGB color.
+        assert line.get_color()[:3] == pytest.approx([ch / 255 for ch in s.rgb])
+    finally:
+        plt.close(fig)
 
 
 # --------------------------------------------------------------------------

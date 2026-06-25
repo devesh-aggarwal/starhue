@@ -1,5 +1,10 @@
-# starhue has no third-party dependencies — it runs on the Python
+# starhue's core has no third-party dependencies — it runs on the Python
 # standard library alone (math, argparse, os, sys, typing).
 #
-# This file is intentionally empty of packages. Install the project itself with:
-#   pip install -e .
+# The one exception is Star.spectrum(), which plots with matplotlib. That lives
+# behind the optional `plot` extra rather than this file, so the core stays
+# zero-dependency. This file is intentionally empty of packages.
+#
+# Install the project itself with:
+#   pip install -e .          # core only
+#   pip install -e '.[plot]'  # + matplotlib, for Star.spectrum() plots
