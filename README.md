@@ -1,7 +1,7 @@
 # starhue
 
 `starhue` takes a temperature value in kelvin, and returns the actual sRGB color that a
-blackbody of that temperature would show to your eye — along with the physics behind it:
+blackbody of that temperature would show to your eye, along with related physics like
 the Planck spectrum, the Wien peak, Stefan–Boltzmann exitance, and the Harvard spectral
 class. It also runs in reverse, turning a color back into a correlated color temperature
 (CCT), and renders it all as a star card in your terminal.
@@ -11,12 +11,11 @@ class. It also runs in reverse, turning a color back into a correlated color tem
 ![PyPI - Version](https://img.shields.io/pypi/v/starhue)
 [![A rectangular badge, half black half purple containing the text made at Code Astro](https://img.shields.io/badge/Made%20at-Code/Astro-blueviolet.svg)](https://semaphorep.github.io/codeastro/)
 
-📖 Full documentation: [starhue.readthedocs.io](https://starhue.readthedocs.io/)
+Full documentation: [starhue.readthedocs.io](https://starhue.readthedocs.io/)
 
 ## Installation
 
-The core is pure standard library — no third-party dependencies, just Python 3.8+.
-Plotting a star's spectrum (`Star.spectrum`) is the one optional feature that
+There are no third-party dependencies, except plotting a star's spectrum (`Star.spectrum`) is the one optional feature that
 needs matplotlib; install it with the `plot` extra when you want it.
 Clone the repo and install it editable into a virtualenv:
 
