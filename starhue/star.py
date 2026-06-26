@@ -102,7 +102,7 @@ class Star:
         self,
         lo_nm: Optional[float] = None,
         hi_nm: Optional[float] = None,
-        samples: int = 200,
+        samples: int = 2000,
     ) -> "Figure":
         """Plot the Planck curve across a wavelength band, tinted the star's color.
 
@@ -155,7 +155,7 @@ class Star:
         bg = "#11131a"
         fig, ax = plt.subplots(figsize=(8, 6), facecolor=bg)
         ax.set_facecolor(bg)
-        ax.plot(wavelengths, radiance, color=line_color, linewidth=2)
+        ax.plot(wavelengths, radiance, color=line_color, linewidth=4)
         ax.set_xlabel("Wavelength (nm)", color="0.85")
         ax.set_ylabel("Spectral radiance (W·sr⁻¹·m⁻²·nm⁻¹)", color="0.85")
         ax.set_title(
