@@ -91,9 +91,10 @@ star.radiant_exitance     # 6.29e7 W/m²  — Stefan–Boltzmann
 star.spectral_type.letter # 'G'
 star.appearance           # 'neutral white'
 
-# Plot the Planck curve, stroked in the star's own integrated colour
+# Plot the Planck curve, stroked in the star's own integrated colour. The band
+# auto-fits around the Wien peak by default; pass lo_nm/hi_nm to override.
 # (needs the optional plotting extra: pip install starhue[plot])
-fig = star.spectrum(380, 750, samples=100)
+fig = star.spectrum()
 fig.savefig("sun.png")    # or fig.show()
 ```
 
@@ -188,7 +189,7 @@ more accurate but slower.
 | `spectral_type` | property | `SpectralType` | Harvard spectral classification. |
 | `appearance` | property | `str` | Friendly perceptual color name, e.g. `"neutral white"`. |
 | `planck(wavelength_nm)` | method | `float` | Spectral radiance at a wavelength in nm. |
-| `spectrum(lo_nm=300, hi_nm=1100, samples=200)` | method | `matplotlib.figure.Figure` | Plot the Planck curve, stroked in the star's own colour. Needs the optional `plot` extra (`pip install starhue[plot]`). For raw data use the `spectrum` physics function. |
+| `spectrum(lo_nm=None, hi_nm=None, samples=200)` | method | `matplotlib.figure.Figure` | Plot the Planck curve, stroked in the star's own colour. The band defaults to auto-fit around the Wien peak (`0.4×`–`3×` the peak wavelength) so the peak is always in view; pass `lo_nm`/`hi_nm` to override. Needs the optional `plot` extra (`pip install starhue[plot]`). For raw data use the `spectrum` physics function. |
 
 Anything not listed here (the colorimetry conversion steps in `starhue.color`,
 the physical constants in `starhue.constants`) is internal plumbing the functions
